@@ -1,0 +1,6 @@
+apache-airflow
+boto3
+yfinance
+pyarrow
+scikit-learn
+pandas

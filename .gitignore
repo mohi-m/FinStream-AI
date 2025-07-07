@@ -35,12 +35,6 @@ pip-log.txt
 *.parquet
 *.pkl
 
-# S3/Cloud artifacts (local copies)
-raw/
-processed/
-model/
-predictions/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -56,3 +50,6 @@ predictions/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Temporary files
+data/
