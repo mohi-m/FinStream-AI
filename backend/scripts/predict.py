@@ -14,13 +14,19 @@ bucket = "mohi-finstream"
 def run():
     print("Running prediction...")
 
-    # Load parquet from S3
     today_str = datetime.datetime.today().strftime("%Y-%m-%d")
-    print(f"Loading parquet file from S3: data/all_tickers_{today_str}.parquet")
-    table = s3.get_object(Bucket=bucket, Key=f"data/all_tickers_{today_str}.parquet")
-    parquet_table = pq.read_table(BytesIO(table['Body'].read()))
+
+    # # Load parquet from S3
+    # print(f"Loading parquet file from S3: data/all_tickers_{today_str}.parquet")
+    # table = s3.get_object(Bucket=bucket, Key=f"data/all_tickers_{today_str}.parquet")
+    # parquet_table = pq.read_table(BytesIO(table['Body'].read()))
+    # df = parquet_table.to_pandas()
+    # print(f"Loaded DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
+
+    # Load parquet from local file (for debugging)
+    parquet_table = pq.read_table(f"./data/{today_str}/all_tickers_{today_str}.parquet")
     df = parquet_table.to_pandas()
-    print(f"Loaded DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
+    print(f"Loaded local DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
 
     tickers = df['Ticker'].unique()
     print(f"Found {len(tickers)} tickers: {tickers}")
@@ -56,15 +62,17 @@ def run():
     pred_df = pd.DataFrame(results)
     print(f"Saving predictions DataFrame with shape: {pred_df.shape}")
     table = pa.Table.from_pandas(pred_df)
-    buffer = BytesIO()
-    pq.write_table(table, buffer)
-    buffer.seek(0)
+    
+    # buffer = BytesIO()
+    # buffer.seek(0)
 
-    # Upload to S3 directly
-    s3.put_object(Bucket=bucket, Key=f"data/predictions_{today_str}.parquet", Body=buffer.getvalue())
-    print("All predictions uploaded to S3.")
+    # # Upload to S3 directly
+    # s3.put_object(Bucket=bucket, Key=f"data/predictions_{today_str}.parquet", Body=buffer.getvalue())
+    # print("All predictions uploaded to S3.")
 
-    # # Save locally (optional, for debugging)
-    # output_path = f"./data/predictions_{today_str}.parquet"
-    # pq.write_table(table, output_path)
-    # print(f"Predictions also saved locally to {output_path}")
+    # Save locally (optional, for debugging)
+    output_path = f"./data/predictions_{today_str}.parquet"
+    pq.write_table(table, output_path)
+    print(f"Predictions also saved locally to {output_path}")
+
+run()
