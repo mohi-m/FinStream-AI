@@ -6,6 +6,10 @@ import pandas as pd
 import datetime
 import io
 
+# Create S3 client once, outside the function for reuse
+s3 = boto3.client('s3')
+bucket = "mohi-finstream"
+
 def run():
     tickers = ["AAPL", "MSFT", "GOOGL"] 
     print("Ingesting data for the following tickers:", tickers)
@@ -22,20 +26,17 @@ def run():
     today_str = datetime.datetime.today().strftime("%Y-%m-%d")
     s3_key = f"data/{today_str}/all_tickers_{today_str}.parquet"
 
-    # Save file locally (debug purposes)
-    print(f"Writing combined data to {s3_key}")
-    pq.write_table(table, s3_key)
-    print(f"Combined data written to {s3_key}")
+    # Write Parquet to in-memory buffer
+    buffer = io.BytesIO()
+    pq.write_table(table, buffer)
+    buffer.seek(0)
 
+    print(f"Uploading {s3_key} to S3 bucket {bucket}")
+    try:
+        s3.upload_fileobj(buffer, bucket, s3_key)
+        print("Upload complete.")
+    except Exception as e:
+        print(f"Failed to upload to S3: {e} to S3 bucket {bucket}")
 
-    # # Write Parquet to in-memory buffer
-    # buffer = io.BytesIO()
-    # pq.write_table(table, buffer)
-    # buffer.seek(0)
-
-    # # Upload to S3 directly from buffer
-    # s3 = boto3.client('s3')
-    # bucket = "mohi-finstream"
-    # print(f"Uploading {s3_key} to S3 bucket {bucket}")
-    # s3.upload_fileobj(buffer, bucket, s3_key)
-    # print("Upload complete.")
+    s3.upload_fileobj(buffer, bucket, s3_key)
+    print("Upload complete.")

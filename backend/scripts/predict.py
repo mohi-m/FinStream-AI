@@ -16,17 +16,13 @@ def run():
 
     today_str = datetime.datetime.today().strftime("%Y-%m-%d")
 
-    # # Load parquet from S3
-    # print(f"Loading parquet file from S3: data/all_tickers_{today_str}.parquet")
-    # table = s3.get_object(Bucket=bucket, Key=f"data/all_tickers_{today_str}.parquet")
-    # parquet_table = pq.read_table(BytesIO(table['Body'].read()))
-    # df = parquet_table.to_pandas()
-    # print(f"Loaded DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
-
-    # Load parquet from local file (for debugging)
-    parquet_table = pq.read_table(f"./data/{today_str}/all_tickers_{today_str}.parquet")
+    # Load parquet from S3
+    print(f"Loading parquet file from S3: data/all_tickers_{today_str}.parquet")
+    table = s3.get_object(Bucket=bucket, Key=f"data/all_tickers_{today_str}.parquet")
+    parquet_table = pq.read_table(BytesIO(table['Body'].read()))
     df = parquet_table.to_pandas()
-    print(f"Loaded local DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
+    print(f"Loaded DataFrame with columns: {df.columns.tolist()} and shape: {df.shape}")
+
 
     tickers = df['Ticker'].unique()
     print(f"Found {len(tickers)} tickers: {tickers}")

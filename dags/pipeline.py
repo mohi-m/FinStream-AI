@@ -1,18 +1,24 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+import boto3
 from datetime import datetime
+from backend.scripts import ingest, predict
+
+import os
 
 def ingest():
     import sys
-    sys.path.append('/home/mohi-m/projects/FinStream-AI/backend/scripts')
-    import ingest
+    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
+    sys.path.append(scripts_path)
+    from backend.scripts import ingest
     ingest.run()
 
 def predict():
     import sys
-    sys.path.append('/home/mohi-m/projects/FinStream-AI/backend/scripts')
-    import predict
+    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
+    sys.path.append(scripts_path)
+    from backend.scripts import predict
     predict.run()
 
 with DAG('stock_pipeline',
@@ -20,9 +26,17 @@ with DAG('stock_pipeline',
          start_date=datetime(2024, 1, 1),
          catchup=False) as dag:
 
-    create_data_dir = BashOperator(
+    def create_s3_prefix():
+        import os
+        from datetime import datetime
+        bucket = os.environ.get('DATA_BUCKET', 'mohi-finstream')
+        prefix = f"{os.environ.get('DATA_PREFIX', 'data')}/{datetime.now().strftime('%Y-%m-%d')}/"
+        s3 = boto3.client('s3')
+        s3.put_object(Bucket=bucket, Key=prefix)
+
+    create_data_dir = PythonOperator(
         task_id='create_data_dir',
-        bash_command="mkdir -p /home/mohi-m/data/$(date +'%Y-%m-%d')"
+        python_callable=create_s3_prefix
     )
 
     t1 = PythonOperator(

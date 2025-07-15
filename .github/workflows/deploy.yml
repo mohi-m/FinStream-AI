@@ -1,0 +1,35 @@
+name: Deploy Airflow DAG to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "backend/scripts,dags"
+          target: "/home/ec2-user/FinStream-AI"
+
+      - name: Run deployment script on EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/FinStream-AI
+            python3 -m pip install -r backend/requirements.txt
+            export SCRIPTS_PATH="/home/ec2-user/FinStream-AI/backend/scripts"
+            export DATA_DIR="/home/ec2-user/data"
+            sudo systemctl restart airflow-webserver || airflow webserver -D
+            sudo systemctl restart airflow-scheduler || airflow scheduler -D
