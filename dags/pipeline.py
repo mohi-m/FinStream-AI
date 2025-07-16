@@ -8,14 +8,14 @@ import os
 
 def ingest():
     import sys
-    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
+    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/ubuntu/FinStream-AI/backend/scripts')
     sys.path.append(scripts_path)
     import ingest
     ingest.run()
 
 def predict():
     import sys
-    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
+    scripts_path = os.environ.get('SCRIPTS_PATH', '/home/ubuntu/FinStream-AI/backend/scripts')
     sys.path.append(scripts_path)
     import predict
     predict.run()
