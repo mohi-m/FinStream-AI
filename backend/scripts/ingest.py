@@ -37,6 +37,3 @@ def run():
         print("Upload complete.")
     except Exception as e:
         print(f"Failed to upload to S3: {e} to S3 bucket {bucket}")
-
-    s3.upload_fileobj(buffer, bucket, s3_key)
-    print("Upload complete.")
