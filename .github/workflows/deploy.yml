@@ -27,9 +27,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/FinStream-AI
-            python3 -m pip install -r backend/requirements.txt
+            source /home/ubuntu/airflow_venv/bin/activate
+            python3 -m pip install -r /home/ubuntu/FinStream-AI/backend/requirements.txt
             export SCRIPTS_PATH="/home/ubuntu/FinStream-AI/backend/scripts"
-            export DATA_DIR="/home/ubuntu/data"
-            sudo systemctl restart airflow-webserver || airflow webserver -D
-            sudo systemctl restart airflow-scheduler || airflow scheduler -D
+            export DATA_BUCKET="mohi-finstream"
+            airflow dags reserialize

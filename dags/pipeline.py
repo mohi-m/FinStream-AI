@@ -3,7 +3,6 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 import boto3
 from datetime import datetime
-from backend.scripts import ingest, predict
 
 import os
 
@@ -21,18 +20,18 @@ def predict():
     from backend.scripts import predict
     predict.run()
 
+def create_s3_prefix():
+    import os
+    from datetime import datetime
+    bucket = os.environ.get('DATA_BUCKET', 'mohi-finstream')
+    prefix = f"data/{datetime.now().strftime('%Y-%m-%d')}/"
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket=bucket, Key=prefix)
+
 with DAG('stock_pipeline',
          schedule='@daily',
          start_date=datetime(2024, 1, 1),
          catchup=False) as dag:
-
-    def create_s3_prefix():
-        import os
-        from datetime import datetime
-        bucket = os.environ.get('DATA_BUCKET', 'mohi-finstream')
-        prefix = f"{os.environ.get('DATA_PREFIX', 'data')}/{datetime.now().strftime('%Y-%m-%d')}/"
-        s3 = boto3.client('s3')
-        s3.put_object(Bucket=bucket, Key=prefix)
 
     create_data_dir = PythonOperator(
         task_id='create_data_dir',
