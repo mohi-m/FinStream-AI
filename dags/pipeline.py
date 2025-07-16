@@ -10,14 +10,14 @@ def ingest():
     import sys
     scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
     sys.path.append(scripts_path)
-    from backend.scripts import ingest
+    import ingest
     ingest.run()
 
 def predict():
     import sys
     scripts_path = os.environ.get('SCRIPTS_PATH', '/home/mohi-m/projects/FinStream-AI/backend/scripts')
     sys.path.append(scripts_path)
-    from backend.scripts import predict
+    import predict
     predict.run()
 
 def create_s3_prefix():
