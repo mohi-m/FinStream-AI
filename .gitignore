@@ -13,10 +13,40 @@ dist/
 dist-ssr/
 *.local
 *.tsbuildinfo
+
+# Frontend app (website)
 frontend/website/node_modules/
 frontend/website/dist/
 frontend/website/.tmp/
 frontend/website/.eslintcache
+
+# Frontend env files
+frontend/website/.env
+frontend/website/.env.local
+frontend/website/.env.*.local
+
+# Vite cache
+.vite/
+frontend/website/.vite/
+
+# Coverage / testing artifacts
+coverage/
+frontend/website/coverage/
+frontend/website/.nyc_output/
+frontend/website/.vitest/
+
+# Storybook build output
+frontend/website/storybook-static/
+
+# Cypress
+frontend/website/cypress/videos/
+frontend/website/cypress/screenshots/
+frontend/website/cypress/downloads/
+
+# Playwright
+frontend/website/playwright-report/
+frontend/website/test-results/
+frontend/website/.playwright/
 
 # Python
 __pycache__/
