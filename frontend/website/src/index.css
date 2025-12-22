@@ -1,128 +1,143 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@theme {
+  --color-background: hsl(210 25% 98%);
+  --color-foreground: hsl(215 25% 15%);
 
-@layer base {
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(215 25% 15%);
+
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(215 25% 15%);
+
+  --color-primary: hsl(215 85% 45%);
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  --color-secondary: hsl(210 25% 95%);
+  --color-secondary-foreground: hsl(215 25% 25%);
+
+  --color-muted: hsl(210 25% 92%);
+  --color-muted-foreground: hsl(215 15% 55%);
+
+  --color-accent: hsl(210 25% 90%);
+  --color-accent-foreground: hsl(215 25% 15%);
+
+  --color-destructive: hsl(0 75% 55%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+
+  --color-success: hsl(142 76% 36%);
+  --color-success-foreground: hsl(0 0% 100%);
+  --color-warning: hsl(38 92% 50%);
+  --color-warning-foreground: hsl(0 0% 100%);
+
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(222.2 84% 4.9%);
+
+  --color-sidebar-background: hsl(0 0% 98%);
+  --color-sidebar-foreground: hsl(240 5.3% 26.1%);
+  --color-sidebar-primary: hsl(240 5.9% 10%);
+  --color-sidebar-primary-foreground: hsl(0 0% 98%);
+  --color-sidebar-accent: hsl(240 4.8% 95.9%);
+  --color-sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --color-sidebar-border: hsl(220 13% 91%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+  --radius-sm: calc(0.5rem - 4px);
+  --radius-md: calc(0.5rem - 2px);
+  --radius-lg: 0.5rem;
+  --radius-xl: calc(0.5rem + 4px);
+
+  /* Shadows */
+  /* --shadow-card: 0 4px 6px -1px hsl(215 25% 15% / 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1); */
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: 210 25% 98%;
-    --foreground: 215 25% 15%;
+    --color-background: hsl(215 25% 8%);
+    --color-foreground: hsl(210 25% 90%);
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --color-card: hsl(215 25% 10%);
+    --color-card-foreground: hsl(210 25% 90%);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --color-popover: hsl(215 25% 10%);
+    --color-popover-foreground: hsl(210 25% 90%);
 
-    --primary: 215 85% 45%;
-    --primary-foreground: 0 0% 100%;
+    --color-primary: hsl(215 85% 60%);
+    --color-primary-foreground: hsl(215 25% 8%);
 
-    --secondary: 210 25% 95%;
-    --secondary-foreground: 215 25% 25%;
+    --color-secondary: hsl(215 25% 15%);
+    --color-secondary-foreground: hsl(210 25% 80%);
 
-    --muted: 210 25% 92%;
-    --muted-foreground: 215 15% 55%;
+    --color-muted: hsl(215 25% 12%);
+    --color-muted-foreground: hsl(215 15% 60%);
 
-    --accent: 210 25% 90%;
-    --accent-foreground: 215 25% 15%;
+    --color-accent: hsl(215 25% 20%);
+    --color-accent-foreground: hsl(210 25% 90%);
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --color-destructive: hsl(0 75% 60%);
+    --color-destructive-foreground: hsl(0 0% 100%);
 
-    /* Financial colors */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Custom financial gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 85% 45%), hsl(215 85% 60%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
-    --gradient-chart: linear-gradient(180deg, hsl(215 85% 45% / 0.1), transparent);
-    
-    /* Shadows */
-    --shadow-card: 0 4px 6px -1px hsl(215 25% 15% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1);
+    --color-success: hsl(142 76% 45%);
+    --color-success-foreground: hsl(0 0% 100%);
+    --color-warning: hsl(38 92% 55%);
+    --color-warning-foreground: hsl(0 0% 100%);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --color-border: hsl(217.2 32.6% 17.5%);
+    --color-input: hsl(217.2 32.6% 17.5%);
+    --color-ring: hsl(212.7 26.8% 83.9%);
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 215 25% 8%;
-    --foreground: 210 25% 90%;
-
-    --card: 215 25% 10%;
-    --card-foreground: 210 25% 90%;
-
-    --popover: 215 25% 10%;
-    --popover-foreground: 210 25% 90%;
-
-    --primary: 215 85% 60%;
-    --primary-foreground: 215 25% 8%;
-
-    --secondary: 215 25% 15%;
-    --secondary-foreground: 210 25% 80%;
-
-    --muted: 215 25% 12%;
-    --muted-foreground: 215 15% 60%;
-
-    --accent: 215 25% 20%;
-    --accent-foreground: 210 25% 90%;
-
-    --destructive: 0 75% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Financial colors for dark mode */
-    --success: 142 76% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 85% 60%), hsl(215 85% 70%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 55%));
-    --gradient-chart: linear-gradient(180deg, hsl(215 85% 60% / 0.2), transparent);
-    
-    /* Dark shadows */
-    --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3);
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --color-sidebar-background: hsl(240 5.9% 10%);
+    --color-sidebar-foreground: hsl(240 4.8% 95.9%);
+    --color-sidebar-primary: hsl(224.3 76.3% 48%);
+    --color-sidebar-primary-foreground: hsl(0 0% 100%);
+    --color-sidebar-accent: hsl(240 3.7% 15.9%);
+    --color-sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --color-sidebar-border: hsl(240 3.7% 15.9%);
+    --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
   }
 }
+
+/* Explicit class-based dark mode as well if 'class' strategy was used previously,
+   but Tailwind 4 uses CSS variables natively so @media above handles system pref. 
+   If the app uses a class toggler, we need to bind these variables to .dark class. 
+*/
+.dark {
+  --color-background: hsl(215 25% 8%);
+  --color-foreground: hsl(210 25% 90%);
+  --color-card: hsl(215 25% 10%);
+  --color-card-foreground: hsl(210 25% 90%);
+  --color-popover: hsl(215 25% 10%);
+  --color-popover-foreground: hsl(210 25% 90%);
+  --color-primary: hsl(215 85% 60%);
+  --color-primary-foreground: hsl(215 25% 8%);
+  --color-secondary: hsl(215 25% 15%);
+  --color-secondary-foreground: hsl(210 25% 80%);
+  --color-muted: hsl(215 25% 12%);
+  --color-muted-foreground: hsl(215 15% 60%);
+  --color-accent: hsl(215 25% 20%);
+  --color-accent-foreground: hsl(210 25% 90%);
+  --color-destructive: hsl(0 75% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-success: hsl(142 76% 45%);
+  --color-success-foreground: hsl(0 0% 100%);
+  --color-warning: hsl(38 92% 55%);
+  --color-warning-foreground: hsl(0 0% 100%);
+  --color-border: hsl(217.2 32.6% 17.5%);
+  --color-input: hsl(217.2 32.6% 17.5%);
+  --color-ring: hsl(212.7 26.8% 83.9%);
+  --color-sidebar-background: hsl(240 5.9% 10%);
+  --color-sidebar-foreground: hsl(240 4.8% 95.9%);
+  --color-sidebar-primary: hsl(224.3 76.3% 48%);
+  --color-sidebar-primary-foreground: hsl(0 0% 100%);
+  --color-sidebar-accent: hsl(240 3.7% 15.9%);
+  --color-sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --color-sidebar-border: hsl(240 3.7% 15.9%);
+  --color-sidebar-ring: hsl(217.2 91.2% 59.8%);
+}
+
 
 @layer base {
   * {
