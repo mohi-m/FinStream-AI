@@ -1,6 +1,7 @@
 import os
 import time
 import datetime
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -11,6 +12,8 @@ import yfinance as yf
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
+
+logger = logging.getLogger(__name__)
 
 
 def _get_connection() -> psycopg2.extensions.connection:
@@ -38,8 +41,10 @@ def _read_tickers(ticker_file: Path) -> List[str]:
     Returns:
         List[str]: Cleaned list of ticker symbols.
     """
+    logger.info(f"Reading tickers from {ticker_file}")
     content = ticker_file.read_text()
     tickers = [t.strip() for t in content.replace("\n", ",").split(",") if t.strip()]
+    logger.info(f"Loaded {len(tickers)} tickers: {', '.join(tickers)}")
     return tickers
 
 
@@ -55,6 +60,7 @@ def _latest_dates_by_ticker(
     Returns:
         Dict[str, Optional[datetime.date]]: Map of ticker to last loaded date (None if absent).
     """
+    logger.info(f"Fetching latest dates for tickers: {', '.join(tickers)}")
     sql = """
         SELECT ticker_id, MAX(date) AS last_date
         FROM fact_price_daily
@@ -64,7 +70,9 @@ def _latest_dates_by_ticker(
     with conn.cursor() as cur:
         cur.execute(sql, (tickers,))
         rows = cur.fetchall()
-    return {ticker_id: last_date for ticker_id, last_date in rows}
+    result = {ticker_id: last_date for ticker_id, last_date in rows}
+    logger.info(f"Latest dates retrieved: {result}")
+    return result
 
 
 def _fetch_history(
@@ -84,10 +92,12 @@ def _fetch_history(
     Returns:
         pd.DataFrame: Normalized price data ready for insertion; empty if no rows returned.
     """
+    logger.info(f"Fetching history for {ticker_symbol} from {start_date} to {end_date}")
     ticker = yf.Ticker(ticker_symbol)
     hist = ticker.history(start=start_date, end=end_date)
     time.sleep(throttle_seconds)
     if hist.empty:
+        logger.warning(f"No price data found for {ticker_symbol} in the requested period")
         return hist
     hist = hist.reset_index()
     hist["ticker_id"] = ticker_symbol
@@ -98,16 +108,17 @@ def _fetch_history(
             "High": "high",
             "Low": "low",
             "Close": "close",
-            "Adj Close": "adj_close",
             "Volume": "volume",
         }
     )
     hist["date"] = pd.to_datetime(hist["date"]).dt.date
-    numeric_cols = ["open", "high", "low", "close", "adj_close"]
+    numeric_cols = ["open", "high", "low", "close"]
     hist[numeric_cols] = hist[numeric_cols].round(4)
-    return hist[
-        ["ticker_id", "date", "open", "high", "low", "close", "adj_close", "volume"]
+    result = hist[
+        ["ticker_id", "date", "open", "high", "low", "close", "volume"]
     ]
+    logger.info(f"Retrieved {len(result)} price records for {ticker_symbol}")
+    return result
 
 
 def _upsert_prices(
@@ -124,84 +135,122 @@ def _upsert_prices(
         None
     """
     if frame.empty:
+        logger.warning("No data to upsert")
         return
-    records = frame.to_records(index=False)
-    values = [tuple(row) for row in records]
+    logger.info(f"Upserting {len(frame)} price records to database")
+    # Convert numpy types to native Python types for psycopg2 compatibility
+    frame = frame.copy()
+    frame["volume"] = frame["volume"].astype("Int64").fillna(0).astype(int)
+    frame["open"] = frame["open"].astype(float)
+    frame["high"] = frame["high"].astype(float)
+    frame["low"] = frame["low"].astype(float)
+    frame["close"] = frame["close"].astype(float)
+    
+    # Convert to list of tuples with native Python types
+    values = [
+        tuple(
+            int(val) if col == "volume" else (float(val) if col in ["open", "high", "low", "close"] else val)
+            for col, val in zip(frame.columns, row)
+        )
+        for row in frame.itertuples(index=False, name=None)
+    ]
     insert_sql = """
         INSERT INTO fact_price_daily
-            (ticker_id, date, open, high, low, close, adj_close, volume)
+            (ticker_id, date, open, high, low, close, volume)
         VALUES %s
         ON CONFLICT (ticker_id, date) DO UPDATE SET
             open = EXCLUDED.open,
             high = EXCLUDED.high,
             low = EXCLUDED.low,
             close = EXCLUDED.close,
-            adj_close = EXCLUDED.adj_close,
             volume = EXCLUDED.volume;
     """
     with conn.cursor() as cur:
         extras.execute_values(cur, insert_sql, values, page_size=page_size)
+    logger.info(f"Successfully upserted {len(frame)} price records")
 
 
-def run(
+def run_fact_price_update(
+    ticker_file: str,
     end_date: Optional[str] = None,
+    start_date: Optional[str] = None,
     throttle_seconds: float = 1.0,
 ) -> None:
     """Main entry: compute date ranges, pull prices per ticker, and upsert to Postgres.
 
     Args:
+        ticker_file: Path to the ticker CSV file.
         end_date: Optional override for inclusive end date in YYYY-MM-DD; defaults to today.
+        start_date: Optional override for inclusive start date in YYYY-MM-DD; if not provided,
+                   defaults to latest_date_from_db + 1 day for existing tickers, or
+                   target_end_date - 1 day for new tickers.
         throttle_seconds: Sleep duration between yfinance calls to reduce rate limit risk.
-
-    Environment:
-        TICKER_FILE: Optional path to the ticker CSV file; defaults to airflow/tickers.csv.
 
     Returns:
         None
     """
-    base_dir = Path(__file__).resolve().parent.parent
-    ticker_file = Path(os.getenv("TICKER_FILE", str(base_dir / "tickers.csv")))
-    tickers = _read_tickers(ticker_file)
+    logger.info(f"Starting fact_price_update with ticker_file={ticker_file}, start_date={start_date}, end_date={end_date}")
+    tickers = _read_tickers(Path(ticker_file))
 
     target_end_date = (
         datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
         if end_date
         else datetime.date.today()
     )
+    logger.info(f"Target end date: {target_end_date}")
+
+    override_start_date = (
+        datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        if start_date
+        else None
+    )
+    if override_start_date:
+        logger.info(f"Override start date: {override_start_date}")
 
     fallback_start_date = target_end_date - datetime.timedelta(days=1)
 
     with _get_connection() as conn:
+        logger.info("Connected to database")
         conn.autocommit = False
         latest_dates = _latest_dates_by_ticker(conn, tickers)
 
         ingested_frames: List[pd.DataFrame] = []
+        logger.info(f"Processing {len(tickers)} tickers")
         for ticker_symbol in tickers:
-            latest_date_from_db = latest_dates.get(ticker_symbol)
-            start_date = (
-                (latest_date_from_db + datetime.timedelta(days=1))
-                if latest_date_from_db
-                else fallback_start_date
-            )
+            if override_start_date:
+                # Use the provided start date for all tickers
+                start_date_for_ticker = override_start_date
+            else:
+                # Use per-ticker logic
+                latest_date_from_db = latest_dates.get(ticker_symbol)
+                start_date_for_ticker = (
+                    (latest_date_from_db + datetime.timedelta(days=1))
+                    if latest_date_from_db
+                    else fallback_start_date
+                )
 
-            if start_date > target_end_date:
+            if start_date_for_ticker > target_end_date:
+                logger.info(f"Skipping {ticker_symbol}: start_date {start_date_for_ticker} > target_end_date {target_end_date}")
                 continue
 
             hist = _fetch_history(
                 ticker_symbol=ticker_symbol,
-                start_date=start_date,
+                start_date=start_date_for_ticker,
                 end_date=target_end_date,
                 throttle_seconds=throttle_seconds,
             )
             if hist.empty:
+                logger.info(f"No data retrieved for {ticker_symbol}")
                 continue
             ingested_frames.append(hist)
 
         if ingested_frames:
             combined = pd.concat(ingested_frames, ignore_index=True)
+            logger.info(f"Combined {len(ingested_frames)} dataframes with {len(combined)} total records")
             _upsert_prices(conn, combined)
-        conn.commit()
-
-
-if __name__ == "__main__":
-    run()
+            conn.commit()
+            logger.info("Transaction committed successfully")
+        else:
+            logger.warning("No data to process")
+            conn.commit()
+    logger.info("fact_price_update completed")
