@@ -81,9 +81,6 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Temporary files
-data/
-
 # Maven
 target/
 pom.xml.tag
