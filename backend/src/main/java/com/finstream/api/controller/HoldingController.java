@@ -4,6 +4,7 @@ import com.finstream.api.dto.HoldingDto;
 import com.finstream.api.service.PortfolioHoldingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,7 +25,7 @@ public class HoldingController {
     public ResponseEntity<Page<HoldingDto>> getHoldings(
             @RequestHeader("X-Firebase-UID") String firebaseUid,
             @PathVariable UUID portfolioId,
-            @PageableDefault(size = 20, sort = "tickerId", direction = Sort.Direction.ASC) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "id.tickerId", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<HoldingDto> holdings = portfolioHoldingService.getHoldings(portfolioId, firebaseUid, pageable);
         return ResponseEntity.ok(holdings);
     }
