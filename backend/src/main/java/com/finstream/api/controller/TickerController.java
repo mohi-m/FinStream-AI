@@ -3,6 +3,7 @@ package com.finstream.api.controller;
 import com.finstream.api.dto.TickerDto;
 import com.finstream.api.service.DimTickerService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,8 +19,8 @@ public class TickerController {
 
     @GetMapping
     public ResponseEntity<Page<TickerDto>> searchTickers(
-            @RequestParam(defaultValue = "") String query,
-            @PageableDefault(size = 20, sort = "tickerId", direction = Sort.Direction.ASC) Pageable pageable) {
+            @RequestParam(defaultValue = "Apple") String query,
+            @ParameterObject @PageableDefault(size = 20, sort = "tickerId", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<TickerDto> tickers = dimTickerService.searchTickers(query, pageable);
         return ResponseEntity.ok(tickers);
     }
