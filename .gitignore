@@ -83,3 +83,43 @@ Desktop.ini
 
 # Temporary files
 data/
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# IDE
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+*.swp
+*.swo
+*~
+.DS_Store
+.classpath
+.project
+.settings/
+bin/
+
+# Build
+.gradle/
+build/
+*.class
+*.jar
+*.war
+*.nar
+*.zip
+*.tar.gz
+
+# Environment
+.env
+.env.local
+*.log
