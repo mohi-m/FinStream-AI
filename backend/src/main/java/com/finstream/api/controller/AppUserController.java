@@ -4,6 +4,7 @@ import com.finstream.api.dto.AppUserDto;
 import com.finstream.api.service.AppUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Slf4j
 public class AppUserController {
     private final AppUserService appUserService;
 
     @GetMapping("/me")
     public ResponseEntity<AppUserDto> getCurrentUser(
             @RequestHeader("X-Firebase-UID") String firebaseUid) {
+        log.info("Received request to get current user info for UID: {}", firebaseUid);
         AppUserDto user = appUserService.getCurrentUser(firebaseUid);
         return ResponseEntity.ok(user);
     }
@@ -25,6 +28,7 @@ public class AppUserController {
     public ResponseEntity<AppUserDto> updateCurrentUser(
             @RequestHeader("X-Firebase-UID") String firebaseUid,
             @Valid @RequestBody AppUserDto dto) {
+        log.info("Received request to update/upsert user info for UID: {}", firebaseUid);
         AppUserDto updatedUser = appUserService.upsertUser(firebaseUid, dto);
         return ResponseEntity.ok(updatedUser);
     }
