@@ -1,170 +1,92 @@
-# FinStream AI — Intelligent Portfolio & Market Forecasting Platform
+# FinStream AI - Intelligent Portfolio and Market Forecasting Platform
 
-A production‑ready, end‑to‑end system for ingesting US equities data, training the best‑performing forecasting models, and delivering real‑time portfolio analytics through a modern web UI.
+A production-ready system for ingesting US equities data, training the best-performing forecasting models, and delivering real-time portfolio analytics through a modern web experience.
 
 <p align="center">
-  <img alt="AWS" src="https://img.shields.io/badge/AWS-MWAA%20%7C%20S3%20%7C%20RDS%20%7C%20ECS-orange?logo=amazonaws&logoColor=white" />
+  <img alt="AWS" src="https://img.shields.io/badge/AWS-%20S3%20%7C%20RDS%20%7C%20ECS-orange?logo=amazonaws&logoColor=white" />
   <img alt="Airflow" src="https://img.shields.io/badge/Orchestration-Apache%20Airflow-017CEE?logo=apacheairflow&logoColor=white" />
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" />
-  <img alt="Frontend" src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite%20%2B%20TypeScript-61DAFB?logo=react&logoColor=white" />
+  <img alt="Frontend" src="https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=white" />
   <img alt="Security" src="https://img.shields.io/badge/Auth-OAuth-232F3E?logo=amazonaws&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/badge/License-All%20Rights%20Reserved-lightgrey" />
 </p>
 
 ---
 
-## TL;DR
+## What this delivers
 
-- Nightly, market‑aware Airflow pipelines on AWS ingest, validate, and warehouse US stock market data.
-- The pipeline trains and backtests multiple models, promotes the winner, and publishes rolling forecasts.
-- A sleek React/TypeScript UI visualizes prices, forecasts, and portfolio risk with secure OAuth login.
+- Market-aware nightly ingestion, validation, and warehousing of US equities data.
+- Automated model selection with walk-forward backtesting and tracked experiment history.
+- Rolling N-day forecasts promoted to production and exposed through authenticated APIs.
+- React dashboard with shadcn/ui, charts, and portfolio analytics.
+- Hardened data quality, idempotent reruns, observability, and secure auth via OAuth2/OIDC.
 
-## Why it stands out
 
-- Market‑aware scheduling: runs after US market close on trading days only (skips weekends/holidays).
-- Best‑model selection: walk‑forward backtesting with automated model selection and versioning.
-- Production data guarantees: idempotent tasks, data quality checks, lineage, and observability.
-- Modern UX: fast Vite build, shadcn/ui components, responsive charts, and delightful micro‑interactions.
+## Capabilities
 
-## Architecture
+- Data platform: extract, validate, and load end-of-day US equities into S3 and warehouse (RDS/Redshift) with schema and freshness checks, reconciliation, and backfill safety.
+- ML forecasting: walk-forward backtests with MAE/MAPE/RMSE, automated best-model promotion, and rolling forecasts persisted for serving.
+- API and auth: cached, low-latency endpoints behind ECS or Lambda with OAuth2/OIDC via Amazon Cognito.
+- Web experience: responsive dashboards, price and forecast charts, portfolio and risk analytics, and micro-interactions built with shadcn/ui and Tailwind.
 
-```mermaid
-flowchart LR
-  subgraph AWS
-    A[Airflow (MWAA)]
-    S3[(S3 Data Lake)]
-    DB[(RDS / Redshift)]
-    REG[(Model Registry)]
-    ECS[ECS Fargate / Lambda APIs]
-    COGNITO[(Amazon Cognito)]
-  end
+## Repository layout
 
-  SRC1[Market Data APIs\n(yfinance / polygon.io)] -->|Extract| A
-  A -->|Load Raw| S3
-  A -->|Validate & Transform| DB
-  A -->|Train & Backtest| REG
-  REG -->|Daily Forecasts| DB
-  DB -->|Serve| ECS
-  ECS -->|OAuth2/OIDC| COGNITO
-  FE[React + Vite Web App] -->|HTTPS| ECS
-  FE -->|Static Assets| S3
-```
+- airflow/ - Dockerized Airflow stack for local runs (compose, requirements, config, DAGs, plugins).
+  - dags/finstream_pipeline.py - market-aware pipeline orchestrator.
+  - plugins/fact_price_update.py - price ingestion and load task.
+  - config/airflow.cfg - runtime configuration for the stack.
+- data/seed - seed data for dimensions and facts (dim_ticker.py, fact_financials.py, fact_price_daily.py, tickers.csv).
+- frontend/website - Vite + React + TypeScript app with Tailwind and shadcn/ui components.
+- backend/ - reserved for the serving/API layer (deployed as a containerized service on ECS in production).
 
-## Features
+## Quickstart (local development)
 
-- Data platform
-  - Robust ETL: extract, validate, and load end‑of‑day (EOD) US equities data to S3 → RDS/Redshift
-  - Quality gates: schema checks, freshness, null thresholds, and reconciliation reports
-  - Idempotency + backfills: safe reruns and historical rebuilds
-  - Observability: CloudWatch logs/metrics and alerting
-- ML forecasting
-  - Daily training step with walk‑forward backtesting and error metrics (MAE/MAPE/RMSE)
-  - Model selection across candidates (e.g., XGBoost, LSTM/TFT) with tracking and versioning
-  - Rolling N‑day forecasts persisted for downstream APIs and UI
-- Application layer
-  - Portfolio creation and management: positions, transactions, performance attribution
-  - Risk analytics: volatility, beta, Sharpe, max drawdown, and historical/parametric VaR
-  - Modern UI: shadcn/ui + Tailwind + chart components for interactive dashboards
-  - Secure auth: OAuth2/OIDC via Amazon Cognito with role‑based access
-  - API layer: low‑latency, cached endpoints hosted on AWS (ECS Fargate or Lambda + API Gateway)
-
-## Monorepo layout
-
-- Backend
-  - Python dependencies: `backend/requirements.txt`
-  - Ingestion script: `backend/scripts/ingest.py`
-  - Prediction script: `backend/scripts/predict.py`
-- Orchestration
-  - Airflow DAG: `dags/pipeline.py`
-- Frontend (Vite + React + TS)
-  - HTML entry: `frontend/website/index.html`
-  - App entry: `frontend/website/src/main.tsx`
-  - Root component: `frontend/website/src/App.tsx`
-  - Styles: `frontend/website/src/index.css`, Tailwind config in `frontend/website/tailwind.config.ts`
-  - UI components: `frontend/website/src/components/*`
-
-## Pipeline scheduling (market‑aware)
-
-- Runs nightly after US market close, 10:15 PM ET on trading days
-- Skips weekends and US market holidays via a trading calendar
-- DAG is time‑zone aware and supports safe backfills and catchup
-
-Example cron (ET): `15 22 * * 1-5` with holiday checks inside the DAG
-
-## Getting started (local)
-
-Prereqs
+### Prerequisites
 
 - Node.js 18+
 - Python 3.10+
-- (Optional) Airflow locally via Docker/WSL2
+- Docker (for the local Airflow stack)
+- AWS credentials with access to required buckets/registries if you want to hit cloud resources
 
-Frontend (PowerShell)
+### Environment
 
-```
-cd frontend/website
-npm install
-npm run dev
-```
-
-Backend (PowerShell)
+Create a root .env with values that fit your environment:
 
 ```
-cd backend
-py -3.10 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python .\scripts\ingest.py    # Ingest market data
-python .\scripts\predict.py   # Generate forecasts
+DB_URL=postgresql://user:pass@localhost:5432/finstream
+AWS_REGION=us-east-1
+S3_BUCKET=finstream-data
+MODEL_REGISTRY_URI=s3://finstream-model-registry
+MARKET_DATA_PROVIDER=yfinance
+POLYGON_API_KEY=pk_your_polygon_key
+VITE_API_BASE_URL=http://localhost:8000
+VITE_COGNITO_USER_POOL_ID=your_pool_id
+VITE_COGNITO_CLIENT_ID=your_client_id
+VITE_COGNITO_DOMAIN=your_domain.auth.us-east-1.amazoncognito.com
 ```
 
-Airflow (local, optional)
+### Run Airflow locally
 
-- Copy `dags/pipeline.py` into your Airflow DAGs folder
-- Recommended: run Airflow via Docker/WSL2 on Windows for best compatibility
+- cd airflow
+- Review and update airflow/.env if needed (Docker UID/GID, credentials).
+- docker compose up -d
+- Open Airflow at http://localhost:8080 and enable the finstream_pipeline DAG.
+- The DAG will ingest prices via plugins/fact_price_update.py, validate, load to the warehouse, and trigger model/forecast tasks.
 
-## Configuration
+### Seed data (optional)
 
-Environment variables (examples)
+- data/seed contains example dimension and fact data you can load into your Postgres/Redshift instance for a quick start.
+- Use your preferred loader (psql, dbt seed, or a simple Python script) to insert the provided records.
 
-Backend
+### Frontend dev server
 
-- `DB_URL` — Postgres/Redshift connection string
-- `AWS_REGION` — e.g., `us-east-1`
-- `S3_BUCKET` — raw/processed storage
-- `MODEL_REGISTRY_URI` — model tracking backend
-- `MARKET_DATA_PROVIDER` — `yfinance` (default) or `polygon`
-- `POLYGON_API_KEY` — if using polygon.io
+- cd frontend/website
+- npm install
+- npm run dev
+- Access the app at http://localhost:5173 with VITE_* variables pointing to your API.
 
-Frontend
+## Operational flow
 
-- `VITE_API_BASE_URL` — base URL for the backend APIs
-- `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID`, `VITE_COGNITO_DOMAIN`
-
-## Dev experience
-
-- TypeScript path alias `@/*` configured in `frontend/website/tsconfig*.json`
-- UI system via Tailwind + shadcn/ui in `frontend/website/src/*`
-- Reusable chart and dashboard components in `frontend/website/src/components`
-
-## Build & deploy
-
-- Frontend
-  - `cd frontend/website && npm run build` → static assets
-- Backend & Pipeline
-  - Containerized services deployed to AWS (ECS Fargate) and MWAA hosts DAGs
-  - Logs/metrics in CloudWatch; secrets in AWS Secrets Manager
-
-## Screenshots
-
-Add your screenshots or GIF demos here to showcase dashboards, forecasts, and portfolio analytics.
-
-## Roadmap
-
-- Options pricing and Greeks for advanced risk
-- Factor models (Fama‑French) and style tilts
-- Live intraday ingestion and nowcasting
-
-## License
-
-All rights reserved.
+- Nightly schedule: runs after US market close on trading days; skips weekends and US holidays via a trading calendar.
+- Tasks: extract prices, validate schema/freshness, load raw and curated tables, build features, train/backtest candidates, register the best model, generate and publish rolling forecasts, refresh API cache.
+- Metrics: MAE, MAPE, RMSE tracked per model version with lineage to source data and hyperparameters.
+- Reliability: idempotent tasks, catchup support, and observability through logs and metrics.
