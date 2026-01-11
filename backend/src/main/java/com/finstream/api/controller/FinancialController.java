@@ -35,7 +35,7 @@ public class FinancialController {
             to = LocalDate.now();
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("reportDate").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id.reportDate").ascending());
         Page<FinancialDto> financials = factFinancialService.getFinancialsByDateRange(tickerId, reportType, from, to, pageable);
         return ResponseEntity.ok(financials);
     }

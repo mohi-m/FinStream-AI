@@ -26,7 +26,7 @@ public class PriceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "365") int size) {
-        
+
         if (from == null) {
             from = LocalDate.now().minusDays(365);
         }
@@ -34,7 +34,7 @@ public class PriceController {
             to = LocalDate.now();
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("date").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id.date").ascending());
         Page<PriceDailyDto> prices = factPriceDailyService.getPricesByDateRange(tickerId, from, to, pageable);
         return ResponseEntity.ok(prices);
     }
