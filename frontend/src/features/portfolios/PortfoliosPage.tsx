@@ -256,7 +256,7 @@ export function PortfoliosPage() {
                           <TableHead className="text-right">Quantity</TableHead>
                           <TableHead className="text-right">Cash Balance</TableHead>
                           <TableHead>Notes</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
+                          <TableHead className="w-20"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -272,7 +272,7 @@ export function PortfoliosPage() {
                                   )
                                 : '-'}
                             </TableCell>
-                            <TableCell className="max-w-[200px] truncate">
+                            <TableCell className="max-w-50 truncate">
                               {holding.notes || '-'}
                             </TableCell>
                             <TableCell>

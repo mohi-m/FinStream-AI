@@ -55,7 +55,7 @@ export function LandingPage() {
     <div className="min-h-screen">
       {/* Animated background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+        <div className="absolute inset-0 bg-linear-to-br from-background via-background to-primary/5" />
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
@@ -109,7 +109,7 @@ export function LandingPage() {
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
               Your{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-blue-400">
                 Financial Dashboard
               </span>{' '}
               Reimagined
@@ -149,7 +149,7 @@ export function LandingPage() {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="mt-20 relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
           <div className="relative rounded-xl border bg-card/50 backdrop-blur-sm p-4 shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {['AAPL', 'MSFT', 'GOOGL'].map((ticker, i) => (
@@ -242,7 +242,7 @@ export function LandingPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-blue-600 p-8 md:p-16 text-center"
+          className="relative overflow-hidden rounded-2xl bg-linear-to-r from-primary to-blue-600 p-8 md:p-16 text-center"
         >
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50" />
           <div className="relative">
