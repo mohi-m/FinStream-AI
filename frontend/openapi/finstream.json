@@ -1,0 +1,682 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "FinStream API",
+    "description": "Portfolio & Financial Data REST API",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "http://localhost:8080", "description": "Generated server url" }],
+  "paths": {
+    "/api/portfolios/{portfolioId}": {
+      "get": {
+        "tags": ["portfolio-controller"],
+        "operationId": "getPortfolio",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PortfolioDto" } } }
+          }
+        }
+      },
+      "put": {
+        "tags": ["portfolio-controller"],
+        "operationId": "updatePortfolio",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PortfolioDto" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PortfolioDto" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["portfolio-controller"],
+        "operationId": "deletePortfolio",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/portfolios/{portfolioId}/holdings/{tickerId}": {
+      "put": {
+        "tags": ["holding-controller"],
+        "operationId": "updateHolding",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/HoldingDto" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/HoldingDto" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["holding-controller"],
+        "operationId": "deleteHolding",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": ["app-user-controller"],
+        "operationId": "getCurrentUser",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/AppUserDto" } } }
+          }
+        }
+      },
+      "put": {
+        "tags": ["app-user-controller"],
+        "operationId": "updateCurrentUser",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AppUserDto" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/AppUserDto" } } }
+          }
+        }
+      }
+    },
+    "/api/portfolios": {
+      "get": {
+        "tags": ["portfolio-controller"],
+        "operationId": "getPortfolios",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/Pageable" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PagePortfolioDto" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["portfolio-controller"],
+        "operationId": "createPortfolio",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PortfolioDto" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PortfolioDto" } } }
+          }
+        }
+      }
+    },
+    "/api/portfolios/{portfolioId}/holdings": {
+      "get": {
+        "tags": ["holding-controller"],
+        "operationId": "getHoldings",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": { "minimum": 0, "type": "integer", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": { "minimum": 1, "type": "integer", "default": 20 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["id.tickerId,ASC"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PageHoldingDto" } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["holding-controller"],
+        "operationId": "addHolding",
+        "parameters": [
+          {
+            "name": "X-Firebase-UID",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "portfolioId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/HoldingDto" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/HoldingDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers": {
+      "get": {
+        "tags": ["ticker-controller"],
+        "operationId": "searchTickers",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "Apple" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": { "minimum": 0, "type": "integer", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": { "minimum": 1, "type": "integer", "default": 20 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["tickerId,ASC"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PageTickerDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers/{tickerId}": {
+      "get": {
+        "tags": ["ticker-controller"],
+        "operationId": "getTicker",
+        "parameters": [
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/TickerDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers/{tickerId}/prices": {
+      "get": {
+        "tags": ["price-controller"],
+        "operationId": "getPrices",
+        "parameters": [
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 365 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PagePriceDailyDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers/{tickerId}/prices/latest": {
+      "get": {
+        "tags": ["price-controller"],
+        "operationId": "getLatestPrice",
+        "parameters": [
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PriceDailyDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers/{tickerId}/financials": {
+      "get": {
+        "tags": ["financial-controller"],
+        "operationId": "getFinancials",
+        "parameters": [
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "reportType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "annual" }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/PageFinancialDto" } } }
+          }
+        }
+      }
+    },
+    "/api/tickers/{tickerId}/financials/latest": {
+      "get": {
+        "tags": ["financial-controller"],
+        "operationId": "getLatestFinancial",
+        "parameters": [
+          { "name": "tickerId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "reportType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "annual" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/FinancialDto" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PortfolioDto": {
+        "required": ["baseCurrency", "portfolioName"],
+        "type": "object",
+        "properties": {
+          "portfolioId": { "type": "string", "format": "uuid" },
+          "portfolioName": { "type": "string" },
+          "baseCurrency": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "HoldingDto": {
+        "required": ["quantity", "tickerId"],
+        "type": "object",
+        "properties": {
+          "portfolioId": { "type": "string", "format": "uuid" },
+          "tickerId": { "type": "string" },
+          "quantity": { "minimum": 0, "exclusiveMinimum": false, "type": "number" },
+          "cashBalance": { "minimum": 0, "exclusiveMinimum": false, "type": "number" },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AppUserDto": {
+        "required": ["fullName"],
+        "type": "object",
+        "properties": {
+          "firebaseUid": { "type": "string" },
+          "email": { "type": "string" },
+          "fullName": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PageTickerDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/TickerDto" } },
+          "number": { "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer", "format": "int32" },
+          "pageable": { "$ref": "#/components/schemas/PageableObject" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "offset": { "type": "integer", "format": "int64" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "pageNumber": { "type": "integer", "format": "int32" },
+          "pageSize": { "type": "integer", "format": "int32" },
+          "paged": { "type": "boolean" },
+          "unpaged": { "type": "boolean" }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "direction": { "type": "string" },
+          "nullHandling": { "type": "string" },
+          "ascending": { "type": "boolean" },
+          "property": { "type": "string" },
+          "ignoreCase": { "type": "boolean" }
+        }
+      },
+      "TickerDto": {
+        "type": "object",
+        "properties": {
+          "tickerId": { "type": "string" },
+          "companyName": { "type": "string" },
+          "sector": { "type": "string" },
+          "industry": { "type": "string" },
+          "currency": { "type": "string" },
+          "lastUpdated": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PagePriceDailyDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/PriceDailyDto" } },
+          "number": { "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer", "format": "int32" },
+          "pageable": { "$ref": "#/components/schemas/PageableObject" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "PriceDailyDto": {
+        "type": "object",
+        "properties": {
+          "tickerId": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "open": { "type": "number" },
+          "high": { "type": "number" },
+          "low": { "type": "number" },
+          "close": { "type": "number" },
+          "volume": { "type": "integer", "format": "int64" }
+        }
+      },
+      "FinancialDto": {
+        "type": "object",
+        "properties": {
+          "tickerId": { "type": "string" },
+          "reportDate": { "type": "string", "format": "date" },
+          "reportType": { "type": "string" },
+          "totalRevenue": { "type": "number" },
+          "netIncome": { "type": "number" },
+          "ebitda": { "type": "number" },
+          "totalAssets": { "type": "number" },
+          "totalLiabilities": { "type": "number" },
+          "totalEquity": { "type": "number" },
+          "cashAndEquivalents": { "type": "number" },
+          "operatingCashFlow": { "type": "number" },
+          "freeCashFlow": { "type": "number" }
+        }
+      },
+      "PageFinancialDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/FinancialDto" } },
+          "number": { "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer", "format": "int32" },
+          "pageable": { "$ref": "#/components/schemas/PageableObject" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "page": { "minimum": 0, "type": "integer", "format": "int32" },
+          "size": { "minimum": 1, "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "PagePortfolioDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/PortfolioDto" } },
+          "number": { "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer", "format": "int32" },
+          "pageable": { "$ref": "#/components/schemas/PageableObject" },
+          "empty": { "type": "boolean" }
+        }
+      },
+      "PageHoldingDto": {
+        "type": "object",
+        "properties": {
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "content": { "type": "array", "items": { "$ref": "#/components/schemas/HoldingDto" } },
+          "number": { "type": "integer", "format": "int32" },
+          "sort": { "type": "array", "items": { "$ref": "#/components/schemas/SortObject" } },
+          "first": { "type": "boolean" },
+          "last": { "type": "boolean" },
+          "numberOfElements": { "type": "integer", "format": "int32" },
+          "pageable": { "$ref": "#/components/schemas/PageableObject" },
+          "empty": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
