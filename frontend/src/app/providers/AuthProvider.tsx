@@ -6,6 +6,7 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from '@/lib/firebase'
+import { userApi } from '@/lib/api'
 
 interface AuthContextType {
   user: User | null
@@ -17,13 +18,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+/**
+ * Syncs the Firebase user to the backend app_user table.
+ * Uses PUT /api/me which has upsert logic - creates if not exists, updates if exists.
+ */
+async function syncUserToBackend(user: User): Promise<void> {
+  try {
+    await userApi.updateMe({
+      email: user.email || undefined,
+      fullName: user.displayName ?? '',
+      firebaseUid: user.uid,
+    })
+  } catch (error) {
+    // Log but don't fail - user can still use the app
+    console.error('Failed to sync user to backend:', error)
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
+    const unsubscribe = onAuthChange(async (user) => {
       setUser(user)
+
+      // Sync user to backend when they log in
+      if (user) {
+        await syncUserToBackend(user)
+      }
+
       setLoading(false)
     })
 

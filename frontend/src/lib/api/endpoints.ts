@@ -50,8 +50,8 @@ export const financialApi = {
 // ============ Portfolio Endpoints ============
 export const portfolioApi = {
   getAll: (params?: { page?: number; size?: number; sort?: string }) =>
+    
     apiGet<PagePortfolioDto>('/api/portfolios', params),
-  
   getById: (portfolioId: string) => apiGet<PortfolioDto>(`/api/portfolios/${portfolioId}`),
   
   create: (data: PortfolioDto) => apiPost<PortfolioDto>('/api/portfolios', data),
