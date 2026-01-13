@@ -61,40 +61,6 @@ const features = [
   },
 ]
 
-const stats = [
-  { value: '50K+', label: 'Active Users', icon: Users },
-  { value: '1M+', label: 'Trades Tracked', icon: TrendingUp },
-  { value: '99.9%', label: 'Uptime', icon: Zap },
-  { value: '150+', label: 'Markets', icon: Globe },
-]
-
-const testimonials = [
-  {
-    name: 'Sarah Chen',
-    role: 'Day Trader',
-    avatar: 'SC',
-    content:
-      'FinStream has completely transformed how I manage my portfolio. The real-time data and analytics are unmatched.',
-    rating: 5,
-  },
-  {
-    name: 'Michael Rodriguez',
-    role: 'Investment Analyst',
-    avatar: 'MR',
-    content:
-      'The financial insights feature saves me hours of research every week. Absolutely essential for my work.',
-    rating: 5,
-  },
-  {
-    name: 'Emily Watson',
-    role: 'Retail Investor',
-    avatar: 'EW',
-    content:
-      'Finally, a platform that makes investing accessible. The UI is beautiful and incredibly intuitive.',
-    rating: 5,
-  },
-]
-
 const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: number }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.5 }}
@@ -289,135 +255,311 @@ export function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Dashboard Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 80 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="mt-24 relative max-w-6xl mx-auto"
-        >
-          {/* Glow effect behind the card */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-blue-500/20 to-violet-500/20 blur-3xl rounded-3xl transform scale-95" />
-
-          {/* Main preview card */}
-          <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-6 shadow-2xl">
-            {/* Browser dots */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full bg-red-500/80" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-              <div className="w-3 h-3 rounded-full bg-green-500/80" />
-              <div className="flex-1 ml-4 h-8 rounded-lg bg-muted/50 flex items-center px-4">
-                <span className="text-xs text-muted-foreground">app.finstream.io</span>
+        {/* ================= 3D DASHBOARD VISUALIZATION ================= */}
+        <div className="perspective-container relative mt-12 h-[500px] md:h-[800px] w-full flex justify-center">
+          {/* The Tilted Dashboard Container */}
+          <div className="tilted-dashboard glass-effect bg-[#0f1623] rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-2xl shadow-black/80 w-full max-w-6xl h-full relative z-20 overflow-hidden flex flex-col">
+            {/* Fake Browser Header */}
+            <div className="h-10 border-b border-slate-700/50 bg-slate-900/50 flex items-center px-4 gap-4 shrink-0">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#febc2e]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#28c840]"></div>
               </div>
-            </div>
-
-            {/* Dashboard content */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['AAPL', 'MSFT', 'GOOGL'].map((ticker, i) => (
-                <motion.div
-                  key={ticker}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.15 }}
-                >
-                  <Card className="bg-background/50 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg font-bold">{ticker}</CardTitle>
-                          <CardDescription className="text-xs">
-                            {ticker === 'AAPL'
-                              ? 'Apple Inc.'
-                              : ticker === 'MSFT'
-                                ? 'Microsoft Corp.'
-                                : 'Alphabet Inc.'}
-                          </CardDescription>
-                        </div>
-                        <div
-                          className={`px-2 py-1 rounded-md text-xs font-medium ${
-                            i === 1
-                              ? 'bg-red-500/10 text-red-500'
-                              : 'bg-emerald-500/10 text-emerald-500'
-                          }`}
-                        >
-                          {i === 1 ? '-1.24%' : `+${(2 + i * 0.5).toFixed(2)}%`}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold">${(180 + i * 45).toFixed(2)}</span>
-                      </div>
-                      {/* Mini chart */}
-                      <div className="mt-4 h-16 flex items-end gap-0.5">
-                        {[...Array(24)].map((_, j) => {
-                          const height = 30 + Math.sin(j * 0.5 + i) * 20 + Math.random() * 30
-                          return (
-                            <div
-                              key={j}
-                              className={`flex-1 rounded-t transition-all duration-300 ${
-                                i === 1 ? 'bg-red-500/60' : 'bg-emerald-500/60'
-                              }`}
-                              style={{ height: `${height}%` }}
-                            />
-                          )
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Portfolio summary bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 }}
-              className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-8">
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Portfolio Value</p>
-                  <p className="text-2xl font-bold">$247,892.54</p>
-                </div>
-                <div className="h-10 w-px bg-border" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Today's Change</p>
-                  <p className="text-lg font-semibold text-emerald-500">+$3,241.18 (+1.32%)</p>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-black/20 text-slate-500 text-xs px-3 py-1 rounded-md flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  www.finstream-ai.app
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                View Details
-              </Button>
-            </motion.div>
+              <div className="w-12"></div> {/* Spacer */}
+            </div>
+
+            {/* Dashboard Body */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Sidebar */}
+              <div className="w-16 md:w-64 border-r border-slate-700/30 bg-slate-900/30 p-4 hidden md:flex flex-col gap-4">
+                <div className="flex items-center gap-3 p-3 bg-primary/10 text-primary rounded-lg border border-primary/20">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                    />
+                  </svg>
+                  <span className="font-medium text-sm">Dashboard</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800/50 rounded-lg transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                    />
+                  </svg>
+                  <span className="font-medium text-sm">Markets</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800/50 rounded-lg transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                  <span className="font-medium text-sm">Analytics</span>
+                </div>
+                <div className="mt-auto p-4 bg-linear-to-br from-primary/20 to-purple-500/10 rounded-xl border border-primary/10">
+                  <div className="text-xs font-bold text-white mb-1">Pro Plan</div>
+                  <div className="text-[10px] text-slate-400">Expires in 12 days</div>
+                </div>
+              </div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 p-6 md:p-8 bg-[#0B101B] overflow-hidden relative">
+                {/* Background Grid for Charts */}
+                <div
+                  className="absolute inset-0 opacity-[0.03]"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+                    backgroundSize: '20px 20px',
+                  }}
+                ></div>
+
+                {/* Header Info */}
+                <div className="flex justify-between items-end mb-8 relative z-10">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-1">Portfolio Overview</h2>
+                    <p className="text-slate-400 text-sm">Welcome back, Alex.</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-white tracking-tight">$142,500.24</div>
+                    <div className="text-emerald-400 text-sm font-medium flex justify-end items-center gap-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3 w-3"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      +2.4% Today
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cards Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+                  {/* Card 1 */}
+                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-xs">
+                        AAPL
+                      </div>
+                      <span className="text-emerald-400 text-xs">+1.2%</span>
+                    </div>
+                    <div className="h-12 w-full flex items-end gap-1 opacity-50">
+                      <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[40%]"></div>
+                      <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[60%]"></div>
+                      <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[50%]"></div>
+                      <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[80%]"></div>
+                      <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[70%]"></div>
+                    </div>
+                    <div className="mt-2 font-bold text-lg">$189.45</div>
+                  </div>
+                  {/* Card 2 */}
+                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm hidden md:block">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-8 w-8 rounded-full bg-[#76b900] flex items-center justify-center text-black font-bold text-xs">
+                        NVDA
+                      </div>
+                      <span className="text-emerald-400 text-xs">+4.5%</span>
+                    </div>
+                    {/* CSS Line Chart */}
+                    <div className="h-12 w-full relative overflow-hidden">
+                      <svg
+                        className="w-full h-full"
+                        viewBox="0 0 100 40"
+                        preserveAspectRatio="none"
+                      >
+                        <path
+                          d="M0,35 C20,35 20,10 40,20 C60,30 60,5 100,0"
+                          fill="none"
+                          stroke="#76b900"
+                          strokeWidth="2"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        <path
+                          d="M0,35 C20,35 20,10 40,20 C60,30 60,5 100,0 L100,40 L0,40 Z"
+                          fill="url(#gradNvda)"
+                          opacity="0.2"
+                        />
+                        <defs>
+                          <linearGradient id="gradNvda" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style={{ stopColor: '#76b900', stopOpacity: 1 }} />
+                            <stop offset="100%" style={{ stopColor: '#76b900', stopOpacity: 0 }} />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div className="mt-2 font-bold text-lg">$460.18</div>
+                  </div>
+                  {/* Card 3 */}
+                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm hidden md:block">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-8 w-8 rounded-full bg-[#000] border border-white/20 flex items-center justify-center text-white font-bold text-xs">
+                        TSLA
+                      </div>
+                      <span className="text-red-400 text-xs">-0.8%</span>
+                    </div>
+                    <div className="h-12 w-full flex items-end gap-1 opacity-50">
+                      <div className="w-1/5 bg-red-500 rounded-t-sm h-[70%]"></div>
+                      <div className="w-1/5 bg-red-500 rounded-t-sm h-[50%]"></div>
+                      <div className="w-1/5 bg-red-500 rounded-t-sm h-[60%]"></div>
+                      <div className="w-1/5 bg-red-500 rounded-t-sm h-[40%]"></div>
+                      <div className="w-1/5 bg-red-500 rounded-t-sm h-[30%]"></div>
+                    </div>
+                    <div className="mt-2 font-bold text-lg">$242.50</div>
+                  </div>
+                </div>
+
+                {/* Main Chart Area */}
+                <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 h-64 md:h-96 relative w-full overflow-hidden">
+                  <div className="flex justify-between mb-4">
+                    <div className="text-sm font-medium text-slate-300">Performance (YTD)</div>
+                    <div className="flex gap-2">
+                      <span className="px-2 py-1 text-xs bg-slate-700 rounded text-slate-300">
+                        1D
+                      </span>
+                      <span className="px-2 py-1 text-xs bg-primary text-white rounded">1W</span>
+                      <span className="px-2 py-1 text-xs bg-slate-700 rounded text-slate-300">
+                        1M
+                      </span>
+                    </div>
+                  </div>
+                  {/* Large Simulated Chart */}
+                  <div className="absolute bottom-0 left-0 right-0 top-16 px-4">
+                    <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+                      <path
+                        d="M0,130 C40,120 60,140 100,100 C140,60 160,90 200,70 C240,50 280,80 320,40 C360,0 380,20 400,10"
+                        fill="none"
+                        stroke="#4F75FF"
+                        strokeWidth="3"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                      <path
+                        d="M0,130 C40,120 60,140 100,100 C140,60 160,90 200,70 C240,50 280,80 320,40 C360,0 380,20 400,10 L400,150 L0,150 Z"
+                        fill="url(#gradMain)"
+                        opacity="0.3"
+                      />
+                      <defs>
+                        <linearGradient id="gradMain" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" style={{ stopColor: '#4F75FF', stopOpacity: 1 }} />
+                          <stop offset="100%" style={{ stopColor: '#4F75FF', stopOpacity: 0 }} />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Fade out at bottom */}
-          <div className="absolute -bottom-8 inset-x-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-        </motion.div>
-      </section>
+          {/* FLOATING UI ELEMENTS (Outside the main dashboard for depth) */}
 
-      {/* Stats Section */}
-      <section className="relative py-20 border-y border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
-                  <stat.icon className="h-6 w-6 text-primary" />
+          {/* Floating Alert 1 */}
+          <div className="absolute top-[10%] -right-4 md:-right-2 z-30 animate-float hidden md:block">
+            <div className="glass-effect p-4 rounded-xl shadow-3xl border-20 border-emerald-500 w-64">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="bg-emerald-500/20 p-1.5 rounded-md text-emerald-500">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                      />
+                    </svg>
+                  </div>
+                  <span className="font-bold text-white text-sm">Price Alert</span>
                 </div>
-                <div className="text-4xl md:text-5xl font-bold gradient-text">{stat.value}</div>
-                <div className="mt-2 text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
+                <span className="text-[10px] text-slate-500">2m ago</span>
+              </div>
+              <p className="text-slate-300 text-xs leading-relaxed">
+                <span className="font-bold text-white">AMD</span> has crossed the 50-day moving
+                average.
+              </p>
+            </div>
+          </div>
+
+          {/* Floating Alert 2 (Left side) */}
+          <div className="absolute bottom-[20%] -left-4 md:-left-12 z-30 hidden animate-float md:block">
+            <div className="glass-effect p-3 rounded-xl shadow-2xl flex items-center gap-3 w-56">
+              <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center text-purple-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs text-slate-400">AI Confidence</div>
+                <div className="text-white font-bold">94% Bullish</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -492,62 +634,6 @@ export function LandingPage() {
               </Card>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-32 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <span className="inline-block px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-sm font-medium text-primary mb-6">
-              Testimonials
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Loved by <span className="gradient-text">Investors</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, i) => (
-              <motion.div
-                key={testimonial.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-              >
-                <Card className="h-full bg-background/80 border-border/50 hover:border-primary/30 transition-all duration-300">
-                  <CardContent className="pt-6">
-                    {/* Rating */}
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(testimonial.rating)].map((_, j) => (
-                        <Star key={j} className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                      ))}
-                    </div>
-
-                    <p className="text-muted-foreground leading-relaxed mb-6">
-                      "{testimonial.content}"
-                    </p>
-
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center text-white font-semibold">
-                        {testimonial.avatar}
-                      </div>
-                      <div>
-                        <p className="font-semibold">{testimonial.name}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
