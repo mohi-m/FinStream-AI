@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   TrendingUp,
   Shield,
@@ -10,14 +10,11 @@ import {
   LineChart,
   ArrowRight,
   Sparkles,
-  Globe,
-  Users,
   ChevronRight,
   Play,
   Check,
-  Star,
 } from 'lucide-react'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { useAuth } from '@/app/providers'
 import { LoginDialog } from '@/features/auth'
 
@@ -74,8 +71,6 @@ export function LandingPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
   const [loginOpen, setLoginOpen] = useState(false)
-  const { scrollYProgress } = useScroll()
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
 
   useEffect(() => {
     if (!loading && user) {
