@@ -11,6 +11,11 @@ export const useAnalyticsTracking = (): void => {
 
   useEffect(() => {
     // Log page view when route changes
-    logPageView(location.pathname, document.title)
-  }, [location.pathname])
+    // Add a small delay to ensure the page title is updated
+    const timer = setTimeout(() => {
+      logPageView(location.pathname, document.title)
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [location.pathname, location.search])
 }

@@ -4,11 +4,17 @@ import { RouterProvider } from 'react-router-dom'
 import { AuthProvider, ThemeProvider, QueryClientProvider } from '@/app/providers'
 import { router } from '@/app/router'
 import { initializeAnalytics } from '@/lib/firebase/analytics'
+import {
+  initializeWebVitalsTracking,
+  initializePageVisibilityTracking,
+} from '@/lib/firebase/webVitals'
 import './index.css'
 
 // Initialize Firebase Analytics (safely)
 try {
   initializeAnalytics()
+  initializeWebVitalsTracking()
+  initializePageVisibilityTracking()
 } catch (error) {
   console.warn('Analytics initialization failed:', error)
 }
