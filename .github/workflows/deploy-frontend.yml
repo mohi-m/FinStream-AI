@@ -12,6 +12,7 @@ jobs:
   build:
     name: Build frontend
     runs-on: ubuntu-latest
+    environment: github-pages
     defaults:
       run:
         working-directory: frontend
