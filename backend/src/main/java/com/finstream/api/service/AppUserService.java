@@ -5,6 +5,8 @@ import com.finstream.api.entity.AppUser;
 import com.finstream.api.exception.DuplicateResourceException;
 import com.finstream.api.exception.ResourceNotFoundException;
 import com.finstream.api.repository.AppUserRepository;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AppUserService {
     private final AppUserRepository appUserRepository;
 
-    public AppUserDto getCurrentUser(String firebaseUid) {
+    public AppUserDto getCurrentUser(@NonNull String firebaseUid) {
         log.debug("Fetching user details for firebaseUid: {}", firebaseUid);
         AppUser user = appUserRepository.findById(firebaseUid)
                 .orElseThrow(() -> {
@@ -27,7 +29,7 @@ public class AppUserService {
         return mapToDto(user);
     }
 
-    public AppUserDto upsertUser(String firebaseUid, AppUserDto dto) {
+    public AppUserDto upsertUser(@NonNull String firebaseUid, AppUserDto dto) {
         log.info("Upserting user with firebaseUid: {}", firebaseUid);
         AppUser user = appUserRepository.findById(firebaseUid)
                 .orElseGet(() -> {
