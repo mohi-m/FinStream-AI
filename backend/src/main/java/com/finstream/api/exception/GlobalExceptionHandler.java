@@ -41,12 +41,12 @@ public class GlobalExceptionHandler {
         log.warn("Unauthorized access: {}", ex.getMessage());
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .error("Not Found")
+                .status(HttpStatus.FORBIDDEN.value())
+                .error("Forbidden")
                 .message(ex.getMessage())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
