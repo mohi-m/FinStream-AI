@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import logging
 import re
 from html import unescape
 from pathlib import Path
@@ -21,7 +22,8 @@ from typing import Optional
 
 from bs4 import BeautifulSoup, Tag
 
-from sec_10k_download import download_latest_10k
+
+LOGGER = logging.getLogger(__name__)
 
 
 BLOCK_TAGS = {
@@ -57,6 +59,7 @@ PERIOD_RE = re.compile(
 ALT_PERIOD_RE = re.compile(
     r"(?i)for\s+the\s+(?:annual|year(?:ly)?)\s+period\s+ended\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})"
 )
+YEAR_RE = re.compile(r"\b(19\d{2}|20\d{2}|21\d{2})\b")
 
 
 def clean_text(text: str) -> str:
@@ -69,6 +72,15 @@ def clean_text(text: str) -> str:
     cleaned = re.sub(r"[^\S\n]+", " ", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
+
+
+def _extract_year(text: Optional[str]) -> str:
+    """Extract a 4-digit year from text; return empty string when not found."""
+
+    if not text:
+        return ""
+    match = YEAR_RE.search(text)
+    return match.group(1) if match else ""
 
 
 def _is_leaf_block(tag: Tag) -> bool:
@@ -86,7 +98,11 @@ def _is_bold_like(tag: Tag) -> bool:
     if tag.name in {"h1", "h2", "h3", "h4", "h5", "h6", "strong", "b"}:
         return True
 
-    style = (tag.get("style") or "").lower().replace(" ", "")
+    style_attr = tag.get("style")
+    if isinstance(style_attr, list):
+        style = " ".join(str(value) for value in style_attr).lower().replace(" ", "")
+    else:
+        style = str(style_attr or "").lower().replace(" ", "")
     if "font-weight:700" in style or "font-weight:bold" in style:
         return True
 
@@ -253,7 +269,8 @@ def extract_10q_payload(
     sections = extract_sections(html_content)
     plain_text = clean_text(BeautifulSoup(html_content, "html.parser").get_text("\n"))
     period_match = PERIOD_RE.search(plain_text) or ALT_PERIOD_RE.search(plain_text)
-    resolved_period = period or (period_match.group(1) if period_match else "")
+    period_source = period or (period_match.group(1) if period_match else "")
+    resolved_period = _extract_year(period_source)
 
     return {
         "ticker": (ticker or "").upper(),
@@ -342,40 +359,8 @@ def load_tickers_from_csv(ticker_csv_file: str) -> list[str]:
     if not deduped:
         raise ValueError(f"No valid ticker symbols found in CSV: {path}")
 
+    LOGGER.info("Loaded %d ticker(s) from CSV: %s", len(deduped), path)
     return deduped
-
-
-def extract_10k_payloads_from_ticker_csv(
-    ticker_csv_file: str,
-    save_directory: str,
-    period: Optional[str] = None,
-) -> dict[str, object]:
-    """Download latest 10-K for each ticker in CSV and extract target sections."""
-
-    tickers = load_tickers_from_csv(ticker_csv_file)
-    results: dict[str, dict[str, str]] = {}
-    errors: dict[str, str] = {}
-
-    for ticker in tickers:
-        try:
-            html_file = download_latest_10k(
-                ticker=ticker, save_directory=save_directory
-            )
-            results[ticker] = extract_10k_payload_from_file(
-                input_file=html_file,
-                ticker=ticker,
-                period=period,
-            )
-        except Exception as exc:
-            errors[ticker] = str(exc)
-
-    return {
-        "results": results,
-        "errors": errors,
-        "total_tickers": len(tickers),
-        "success_count": len(results),
-        "error_count": len(errors),
-    }
 
 
 def _find_latest_downloaded_10k_html(save_directory: str, ticker: str) -> Path:
@@ -406,7 +391,29 @@ def _find_latest_downloaded_10k_html(save_directory: str, ticker: str) -> Path:
             f"No downloaded 10-K HTML file found for ticker '{ticker_upper}' under '{base_dir}'"
         )
 
-    return max(candidates, key=lambda file_path: file_path.stat().st_mtime)
+    latest = max(candidates, key=lambda file_path: file_path.stat().st_mtime)
+    LOGGER.debug("Selected latest 10-K HTML for %s: %s", ticker_upper, latest)
+    return latest
+
+
+def _write_json_file(output_path: Path, payload: object) -> None:
+    """Write JSON payload to disk, creating parent directories when needed."""
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    LOGGER.info("Wrote JSON output: %s", output_path)
+
+
+def _build_ticker_output_path(html_file: Path, ticker: str) -> Path:
+    """Build per-ticker output path near the source filing HTML file."""
+
+    ticker_prefix = (ticker or "").strip().upper()
+    if not ticker_prefix:
+        ticker_prefix = "UNKNOWN"
+    return html_file.parent / f"{ticker_prefix}_10k_extract_output.json"
 
 
 def extract_10k_payloads_from_downloaded_ticker_csv(
@@ -417,25 +424,46 @@ def extract_10k_payloads_from_downloaded_ticker_csv(
     """Extract sections for each ticker using already downloaded 10-K HTML files."""
 
     tickers = load_tickers_from_csv(ticker_csv_file)
+    LOGGER.info(
+        "Starting extraction for %d ticker(s) using save directory: %s",
+        len(tickers),
+        Path(save_directory).expanduser().resolve(),
+    )
     results: dict[str, dict[str, str]] = {}
     errors: dict[str, str] = {}
+    output_files: dict[str, str] = {}
 
     for ticker in tickers:
+        LOGGER.info("Processing ticker: %s", ticker)
         try:
             html_file = _find_latest_downloaded_10k_html(
                 save_directory=save_directory,
                 ticker=ticker,
             )
-            results[ticker] = extract_10k_payload_from_file(
+            extracted_payload = extract_10k_payload_from_file(
                 input_file=str(html_file),
                 ticker=ticker,
                 period=period,
             )
+            results[ticker] = extracted_payload
+
+            ticker_output_path = _build_ticker_output_path(html_file, ticker)
+            _write_json_file(ticker_output_path, extracted_payload)
+            output_files[ticker] = str(ticker_output_path)
+            LOGGER.info("Completed ticker: %s", ticker)
         except Exception as exc:
             errors[ticker] = str(exc)
+            LOGGER.exception("Failed ticker: %s", ticker)
 
+    LOGGER.info(
+        "Extraction run complete. Total: %d, Success: %d, Errors: %d",
+        len(tickers),
+        len(results),
+        len(errors),
+    )
     return {
         "results": results,
+        "output_files": output_files,
         "errors": errors,
         "total_tickers": len(tickers),
         "success_count": len(results),
@@ -443,77 +471,46 @@ def extract_10k_payloads_from_downloaded_ticker_csv(
     }
 
 
+def _configure_logging() -> None:
+    """Configure console logging for script execution."""
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    )
+
+
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Extract Item 7 MD&A and Item 1A Risk Factors from SEC 10-K HTML filings."
+        description="Extract Item 7 MD&A and Item 1A Risk Factors from downloaded SEC 10-K HTML filings listed in a CSV."
     )
-    parser.add_argument(
-        "--input-file", required=False, help="Path to raw 10-K HTML file"
-    )
-    parser.add_argument("--ticker", required=False, help="Single ticker symbol")
     parser.add_argument(
         "--ticker-csv",
-        required=False,
-        help="Path to CSV file containing ticker list for batch extraction",
+        required=True,
+        help="Path to CSV file containing ticker list for extraction",
     )
     parser.add_argument(
         "--save-directory",
-        required=False,
-        help="Directory used to download 10-K files in batch mode",
-    )
-    parser.add_argument(
-        "--use-downloaded-only",
-        action="store_true",
-        help="In batch mode, use existing downloaded files in --save-directory instead of downloading again",
+        required=True,
+        help="Directory containing downloaded SEC filings (sec-edgar-filings)",
     )
     parser.add_argument(
         "--period", default=None, help="Optional period override, e.g. 'June 29, 2025'"
-    )
-    parser.add_argument(
-        "--output-json",
-        default=None,
-        help="Optional output file path for JSON payload; prints to stdout when omitted",
     )
     return parser
 
 
 if __name__ == "__main__":
+    _configure_logging()
     args = _build_arg_parser().parse_args()
 
-    if args.ticker_csv:
-        if not args.save_directory:
-            raise ValueError("--save-directory is required when using --ticker-csv")
-
-        if args.use_downloaded_only:
-            payload = extract_10k_payloads_from_downloaded_ticker_csv(
-                ticker_csv_file=args.ticker_csv,
-                save_directory=args.save_directory,
-                period=args.period,
-            )
-        else:
-            payload = extract_10k_payloads_from_ticker_csv(
-                ticker_csv_file=args.ticker_csv,
-                save_directory=args.save_directory,
-                period=args.period,
-            )
-    else:
-        if not args.input_file or not args.ticker:
-            raise ValueError(
-                "Single mode requires both --input-file and --ticker, or use --ticker-csv with --save-directory"
-            )
-
-        payload = extract_10k_payload_from_file(
-            input_file=args.input_file,
-            ticker=args.ticker,
-            period=args.period,
-        )
-
-    output = json.dumps(payload, ensure_ascii=False, indent=2)
-    if args.output_json:
-        output_path = Path(args.output_json).expanduser().resolve()
-        if output_path.suffix.lower() != ".json" and not output_path.is_file():
-            output_path.mkdir(parents=True, exist_ok=True)
-            output_path = output_path / "10k_extract_output.json"
-        output_path.write_text(output, encoding="utf-8")
-    else:
-        print(output)
+    payload = extract_10k_payloads_from_downloaded_ticker_csv(
+        ticker_csv_file=args.ticker_csv,
+        save_directory=args.save_directory,
+        period=args.period,
+    )
+    LOGGER.info(
+        "Extraction complete. Success: %s, Errors: %s",
+        payload["success_count"],
+        payload["error_count"],
+    )
