@@ -44,3 +44,11 @@ logging:
 # CORS configuration
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${OPENAI_API_KEY:}
+      model-name: gpt-5-mini
+      log-requests: true
+      log-responses: true
