@@ -3,8 +3,10 @@
 This module is designed for use inside Airflow tasks and supports:
 - Parsing raw 10-K HTML with BeautifulSoup.
 - TOC-aware extraction of:
-    - Item 7. Management's Discussion and Analysis
-  - Item 1A. Risk Factors
+        - Item 1A. Risk Factors
+        - Item 3. Legal Proceedings
+        - Item 7. Management's Discussion and Analysis
+        - Item 7A. Quantitative and Qualitative Disclosures About Market Risk
 - Text cleaning for downstream NLP/storage.
 - JSON-ready payload output with ticker and period metadata.
 """
@@ -46,12 +48,20 @@ MDA_HEADER_RE = re.compile(
     r"(?i)\bitem\s*7\b\s*[\.:\-–—]*\s*management['’`s\s]+discussion\s+and\s+analysis"
 )
 RISK_HEADER_RE = re.compile(r"(?i)\bitem\s*1a\b\s*[\.:\-–—]*\s*risk\s+factors")
+LEGAL_HEADER_RE = re.compile(r"(?i)\bitem\s*3\b\s*[\.:\-–—]*\s*legal\s+proceedings")
+MARKET_RISK_HEADER_RE = re.compile(
+    r"(?i)\bitem\s*7a\b\s*[\.:\-–—]*\s*quantitative\s+and\s+qualitative\s+disclosures\s+about\s+market\s+risk"
+)
 
 GENERIC_ITEM_RE = re.compile(r"(?i)^\s*item\s*\d+[a-z]?\b")
 MDA_END_RE = re.compile(
     r"(?i)^\s*(item\s*7a\b|item\s*8\b|item\s*9\b|part\s*iii\b|signatures?\b)"
 )
 RISK_END_RE = re.compile(r"(?i)^\s*(item\s*1b\b|item\s*2\b|part\s*ii\b)")
+LEGAL_END_RE = re.compile(r"(?i)^\s*(item\s*4\b|part\s*ii\b)")
+MARKET_RISK_END_RE = re.compile(
+    r"(?i)^\s*(item\s*8\b|item\s*9\b|part\s*iii\b|signatures?\b)"
+)
 
 PERIOD_RE = re.compile(
     r"(?i)for\s+the\s+fiscal\s+year\s+ended\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})"
@@ -60,6 +70,7 @@ ALT_PERIOD_RE = re.compile(
     r"(?i)for\s+the\s+(?:annual|year(?:ly)?)\s+period\s+ended\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})"
 )
 YEAR_RE = re.compile(r"\b(19\d{2}|20\d{2}|21\d{2})\b")
+HEADING_MAX_LEN = 240
 
 
 def clean_text(text: str) -> str:
@@ -107,6 +118,19 @@ def _is_bold_like(tag: Tag) -> bool:
         return True
 
     return bool(tag.find(["strong", "b"]))
+
+
+def _looks_like_heading_text(text: str) -> bool:
+    """Heuristic for heading-like SEC lines even when not rendered bold."""
+
+    compact = (text or "").strip()
+    if not compact:
+        return False
+    if len(compact) > HEADING_MAX_LEN:
+        return False
+    return bool(
+        re.match(r"(?i)^\s*(item\s*\d+[a-z]?\b|part\s*[ivx]+\b|signatures?\b)", compact)
+    )
 
 
 def _build_blocks(soup: BeautifulSoup) -> list[dict[str, object]]:
@@ -164,15 +188,21 @@ def _find_header_index(
     """Find first matching section header after TOC; prefer bold-like blocks."""
 
     candidates: list[int] = []
+    heading_like_candidates: list[int] = []
     for i, block in enumerate(blocks):
         if i <= toc_end_idx:
             continue
         text = str(block["text"])
         if header_re.search(text):
             candidates.append(i)
+            if bool(block["is_bold"]) or _looks_like_heading_text(text):
+                heading_like_candidates.append(i)
 
     if not candidates:
         return None
+
+    if heading_like_candidates:
+        return heading_like_candidates[0]
 
     for idx in candidates:
         if bool(blocks[idx]["is_bold"]):
@@ -188,7 +218,8 @@ def _next_boundary_index(
 
     for i in range(start_idx + 1, len(blocks)):
         text = str(blocks[i]["text"])
-        if bool(blocks[i]["is_bold"]) and end_re.search(text):
+        is_heading_like = bool(blocks[i]["is_bold"]) or _looks_like_heading_text(text)
+        if is_heading_like and end_re.search(text):
             return i
     return len(blocks)
 
@@ -206,7 +237,7 @@ def _slice_section_text(
 
 
 def extract_sections(html_content: str) -> dict[str, str]:
-    """Extract Item 7 (MD&A) and Item 1A (Risk Factors) text from raw 10-K HTML.
+    """Extract key sections from raw 10-K HTML.
 
     The extraction is TOC-aware: it first identifies the Table of Contents region
     and then finds the section headers that appear after it, preferring bold-like
@@ -217,8 +248,10 @@ def extract_sections(html_content: str) -> dict[str, str]:
 
     Returns:
         Dictionary with keys:
-        - ``mda_text``
         - ``risk_text``
+        - ``legal_text``
+        - ``mda_text``
+        - ``market_risk_text``
     """
 
     soup = BeautifulSoup(html_content, "html.parser")
@@ -227,30 +260,51 @@ def extract_sections(html_content: str) -> dict[str, str]:
 
     blocks = _build_blocks(soup)
     if not blocks:
-        return {"mda_text": "", "risk_text": ""}
+        return {
+            "risk_text": "",
+            "legal_text": "",
+            "mda_text": "",
+            "market_risk_text": "",
+        }
 
     toc_end_idx = _find_toc_index(blocks)
 
-    mda_idx = _find_header_index(blocks, MDA_HEADER_RE, toc_end_idx)
     risk_idx = _find_header_index(blocks, RISK_HEADER_RE, toc_end_idx)
+    legal_idx = _find_header_index(blocks, LEGAL_HEADER_RE, toc_end_idx)
+    mda_idx = _find_header_index(blocks, MDA_HEADER_RE, toc_end_idx)
+    market_risk_idx = _find_header_index(blocks, MARKET_RISK_HEADER_RE, toc_end_idx)
 
-    mda_end = (
-        _next_boundary_index(blocks, mda_idx, MDA_END_RE)
-        if mda_idx is not None
-        else len(blocks)
-    )
     risk_end = (
         _next_boundary_index(blocks, risk_idx, RISK_END_RE)
         if risk_idx is not None
         else len(blocks)
     )
+    legal_end = (
+        _next_boundary_index(blocks, legal_idx, LEGAL_END_RE)
+        if legal_idx is not None
+        else len(blocks)
+    )
+    mda_end = (
+        _next_boundary_index(blocks, mda_idx, MDA_END_RE)
+        if mda_idx is not None
+        else len(blocks)
+    )
+    market_risk_end = (
+        _next_boundary_index(blocks, market_risk_idx, MARKET_RISK_END_RE)
+        if market_risk_idx is not None
+        else len(blocks)
+    )
 
-    mda_text = _slice_section_text(blocks, mda_idx, mda_end)
     risk_text = _slice_section_text(blocks, risk_idx, risk_end)
+    legal_text = _slice_section_text(blocks, legal_idx, legal_end)
+    mda_text = _slice_section_text(blocks, mda_idx, mda_end)
+    market_risk_text = _slice_section_text(blocks, market_risk_idx, market_risk_end)
 
     return {
-        "mda_text": mda_text,
         "risk_text": risk_text,
+        "legal_text": legal_text,
+        "mda_text": mda_text,
+        "market_risk_text": market_risk_text,
     }
 
 
@@ -275,8 +329,10 @@ def extract_10q_payload(
     return {
         "ticker": (ticker or "").upper(),
         "period": resolved_period,
-        "mda_text": sections.get("mda_text", ""),
         "risk_text": sections.get("risk_text", ""),
+        "legal_text": sections.get("legal_text", ""),
+        "mda_text": sections.get("mda_text", ""),
+        "market_risk_text": sections.get("market_risk_text", ""),
     }
 
 
@@ -482,7 +538,7 @@ def _configure_logging() -> None:
 
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Extract Item 7 MD&A and Item 1A Risk Factors from downloaded SEC 10-K HTML filings listed in a CSV."
+        description="Extract Item 1A, Item 3, Item 7, and Item 7A from downloaded SEC 10-K HTML filings listed in a CSV."
     )
     parser.add_argument(
         "--ticker-csv",
