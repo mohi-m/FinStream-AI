@@ -26,6 +26,7 @@ public final class CommentaryDto {
     public static class PortfolioCommentaryResponse {
         private UUID portfolioId;
         private String portfolioName;
+        private String portfolioOverview;
         private List<TickerCommentary> commentaries;
         private LocalDateTime generatedAt;
     }

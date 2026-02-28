@@ -29,7 +29,7 @@ public interface TickerCommentaryAiService {
             - Be factual; cite specifics from the filings when possible.
             - If the provided excerpts lack information for a section, state that clearly \
               rather than speculating.
-            - Keep total length under 500 words.
+            - Keep total length under 200 words.
             """)
     @UserMessage("""
             Company : {{ticker}} — {{companyName}}
@@ -46,4 +46,35 @@ public interface TickerCommentaryAiService {
             @V("companyName") String companyName,
             @V("sector") String sector,
             @V("context") String context);
+
+    @SystemMessage("""
+            You are a senior portfolio strategist. Given individual analyst commentaries \
+            for each position in an investment portfolio, produce a holistic portfolio overview.
+
+            Structure your overview with the following sections:
+            1. **Portfolio Composition** – summarise what sectors and companies the portfolio holds.
+            2. **Key Strengths** – common positive themes across holdings.
+            3. **Concentration Risks** – sector, geographic, or single-name concentration concerns.
+            4. **Cross-Cutting Risk Factors** – risks that affect multiple holdings simultaneously \
+               (e.g., macro, regulatory, interest-rate exposure).
+            5. **Diversification Assessment** – how well-diversified the portfolio is and any gaps.
+            6. **Overall Verdict** – a balanced, actionable summary for the investor.
+
+            Guidelines:
+            - Reference specific tickers when making a point.
+            - Be concise; keep total length under 200 words.
+            - Do not repeat the individual commentaries verbatim.
+            """)
+    @UserMessage("""
+            Portfolio: {{portfolioName}}
+
+            === Individual Position Commentaries ===
+            {{commentaries}}
+            =========================================
+
+            Produce the portfolio overview now.
+            """)
+    String generatePortfolioOverview(
+            @V("portfolioName") String portfolioName,
+            @V("commentaries") String commentaries);
 }

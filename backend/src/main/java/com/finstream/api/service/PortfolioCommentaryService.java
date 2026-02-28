@@ -101,12 +101,48 @@ public class PortfolioCommentaryService {
             }
         }
 
+        // 4. Generate portfolio-level overview from all individual commentaries
+        String portfolioOverview = generatePortfolioOverview(
+                portfolio.getPortfolioName(), commentaries);
+
         return PortfolioCommentaryResponse.builder()
                 .portfolioId(portfolioId)
                 .portfolioName(portfolio.getPortfolioName())
+                .portfolioOverview(portfolioOverview)
                 .commentaries(commentaries)
                 .generatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    /**
+     * Concatenates all individual ticker commentaries and asks the LLM
+     * for a holistic portfolio overview.
+     */
+    private String generatePortfolioOverview(String portfolioName,
+            List<TickerCommentary> commentaries) {
+        // Filter to commentaries that actually have content
+        List<TickerCommentary> valid = commentaries.stream()
+                .filter(c -> c.getChunksUsed() != null && c.getChunksUsed() > 0)
+                .toList();
+
+        if (valid.isEmpty()) {
+            return "No sufficient filing data across holdings to produce a portfolio overview.";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (TickerCommentary tc : valid) {
+            sb.append(String.format("### %s — %s (%s)\n",
+                    tc.getTickerId(), tc.getCompanyName(), tc.getSector()));
+            sb.append(tc.getCommentary());
+            sb.append("\n\n---\n\n");
+        }
+
+        try {
+            return aiService.generatePortfolioOverview(portfolioName, sb.toString());
+        } catch (Exception ex) {
+            log.error("Failed to generate portfolio overview: {}", ex.getMessage(), ex);
+            return "Portfolio overview could not be generated: " + ex.getMessage();
+        }
     }
 
     // ------------------------------------------------------------------
