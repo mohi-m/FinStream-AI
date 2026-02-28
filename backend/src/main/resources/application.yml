@@ -52,3 +52,20 @@ langchain4j:
       model-name: gpt-5-mini
       log-requests: true
       log-responses: true
+    embedding-model:
+      api-key: ${OPENAI_API_KEY:}
+      model-name: text-embedding-3-small
+
+# ------------------------------------------------------------------
+# Vector DB (pgvector) — separate from the main datasource
+# ------------------------------------------------------------------
+vector-db:
+  datasource:
+    url: ${VECTOR_DB_URL:jdbc:postgresql://localhost:5432/finstream-pgvector}
+    username: ${VECTOR_DB_USER:postgres}
+    password: ${VECTOR_DB_PASSWORD:postgres}
+
+# RAG retrieval settings
+commentary:
+  retrieval:
+    max-chunks: 15

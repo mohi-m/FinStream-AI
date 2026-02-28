@@ -9,10 +9,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface PortfolioHoldingRepository extends JpaRepository<PortfolioHolding, PortfolioHoldingId> {
     @Query("SELECT ph FROM PortfolioHolding ph WHERE ph.id.portfolioId = :portfolioId")
     Page<PortfolioHolding> findByPortfolioId(@Param("portfolioId") UUID portfolioId, Pageable pageable);
+
+    @Query("SELECT ph FROM PortfolioHolding ph WHERE ph.id.portfolioId = :portfolioId")
+    List<PortfolioHolding> findAllByPortfolioId(@Param("portfolioId") UUID portfolioId);
 }
