@@ -5,7 +5,8 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 /**
- * LangChain4j AI Service interface for generating per-ticker investment commentary
+ * LangChain4j AI Service interface for generating per-ticker investment
+ * commentary
  * from retrieved SEC filing context.
  * <p>
  * The bean is registered in {@link com.finstream.api.config.LangChainConfig}.

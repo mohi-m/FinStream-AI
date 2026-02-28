@@ -12,7 +12,8 @@ import java.util.UUID;
  */
 public final class CommentaryDto {
 
-    private CommentaryDto() {}
+    private CommentaryDto() {
+    }
 
     /**
      * Response for the whole portfolio commentary.

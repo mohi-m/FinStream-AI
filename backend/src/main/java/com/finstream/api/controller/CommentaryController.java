@@ -22,11 +22,12 @@ public class CommentaryController {
     /**
      * Generate investment commentary for all holdings in a portfolio.
      *
-     * <p>Retrieves relevant SEC filing 10-K/10-Q chunks from the vector DB
+     * <p>
+     * Retrieves relevant SEC filing 10-K/10-Q chunks from the vector DB
      * for each ticker and passes them to the LLM to produce commentary.
      *
-     * @param firebaseUid  user identity (from request header)
-     * @param portfolioId  portfolio to analyse
+     * @param firebaseUid user identity (from request header)
+     * @param portfolioId portfolio to analyse
      * @return commentary per ticker
      */
     @GetMapping("/{portfolioId}/commentary")
@@ -34,8 +35,7 @@ public class CommentaryController {
             @RequestHeader("X-Firebase-UID") String firebaseUid,
             @PathVariable UUID portfolioId) {
 
-        PortfolioCommentaryResponse response =
-                commentaryService.generateCommentary(portfolioId, firebaseUid);
+        PortfolioCommentaryResponse response = commentaryService.generateCommentary(portfolioId, firebaseUid);
         return ResponseEntity.ok(response);
     }
 }

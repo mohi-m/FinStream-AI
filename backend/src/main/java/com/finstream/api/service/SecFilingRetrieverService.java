@@ -62,8 +62,8 @@ public class SecFilingRetrieverService {
     /**
      * Retrieve the most relevant SEC filing chunks for a ticker.
      *
-     * @param ticker  stock ticker, e.g. "AAPL"
-     * @param query   natural-language query used to embed and search
+     * @param ticker stock ticker, e.g. "AAPL"
+     * @param query  natural-language query used to embed and search
      * @return ordered list of matching chunks (highest similarity first)
      */
     public List<SecFilingChunk> retrieve(String ticker, String query) {
@@ -76,7 +76,8 @@ public class SecFilingRetrieverService {
     public List<SecFilingChunk> retrieve(String ticker, String query, Integer filingYear) {
         log.debug("Embedding query for ticker={}, filingYear={}", ticker, filingYear);
 
-        // Embed the query using the same model used at ingestion time (text-embedding-3-small)
+        // Embed the query using the same model used at ingestion time
+        // (text-embedding-3-small)
         float[] queryEmbedding = embeddingModel
                 .embed(TextSegment.from(query))
                 .content()
@@ -123,12 +124,14 @@ public class SecFilingRetrieverService {
     }
 
     /**
-     * Converts a float[] embedding into the pgvector literal format {@code [0.1,0.2,...]}.
+     * Converts a float[] embedding into the pgvector literal format
+     * {@code [0.1,0.2,...]}.
      */
     private String toVectorLiteral(float[] embedding) {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < embedding.length; i++) {
-            if (i > 0) sb.append(',');
+            if (i > 0)
+                sb.append(',');
             sb.append(embedding[i]);
         }
         sb.append(']');

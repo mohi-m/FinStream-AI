@@ -23,13 +23,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Orchestrates RAG-based commentary generation for every holding in a portfolio.
+ * Orchestrates RAG-based commentary generation for every holding in a
+ * portfolio.
  *
- * <p>Flow per ticker:
+ * <p>
+ * Flow per ticker:
  * <ol>
- *   <li>Embed a broad financial-analysis query via {@link SecFilingRetrieverService}.</li>
- *   <li>Retrieve top-N SEC filing chunks from the pgvector database.</li>
- *   <li>Pass the chunks as context to the LLM via {@link TickerCommentaryAiService}.</li>
+ * <li>Embed a broad financial-analysis query via
+ * {@link SecFilingRetrieverService}.</li>
+ * <li>Retrieve top-N SEC filing chunks from the pgvector database.</li>
+ * <li>Pass the chunks as context to the LLM via
+ * {@link TickerCommentaryAiService}.</li>
  * </ol>
  */
 @Service
@@ -49,16 +53,15 @@ public class PortfolioCommentaryService {
      * Intentionally broad so that it surfaces the most relevant excerpts
      * across Items 1A, 3, 7 and 7A.
      */
-    private static final String ANALYSIS_QUERY =
-            "financial performance revenue growth profitability risk factors " +
+    private static final String ANALYSIS_QUERY = "financial performance revenue growth profitability risk factors " +
             "legal proceedings regulatory concerns market risk interest rate " +
             "foreign exchange commodity exposure management discussion analysis";
 
     /**
      * Generate investment commentary for every ticker held in the given portfolio.
      *
-     * @param portfolioId  UUID of the portfolio
-     * @param firebaseUid  authenticated user's Firebase UID
+     * @param portfolioId UUID of the portfolio
+     * @param firebaseUid authenticated user's Firebase UID
      * @return complete commentary response
      */
     public PortfolioCommentaryResponse generateCommentary(UUID portfolioId, String firebaseUid) {
@@ -182,10 +185,10 @@ public class PortfolioCommentaryService {
     private String humanReadableItem(String itemCode) {
         return switch (itemCode) {
             case "item_1a" -> "Item 1A: Risk Factors";
-            case "item_3"  -> "Item 3: Legal Proceedings";
-            case "item_7"  -> "Item 7: MD&A";
+            case "item_3" -> "Item 3: Legal Proceedings";
+            case "item_7" -> "Item 7: MD&A";
             case "item_7a" -> "Item 7A: Market Risk Disclosures";
-            default        -> itemCode;
+            default -> itemCode;
         };
     }
 }
