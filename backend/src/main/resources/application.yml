@@ -62,8 +62,8 @@ langchain4j:
 vector-db:
   datasource:
     url: ${VECTOR_DB_URL:jdbc:postgresql://localhost:5432/finstream-pgvector}
-    username: ${VECTOR_DB_USER:postgres}
-    password: ${VECTOR_DB_PASSWORD:postgres}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
 
 # RAG retrieval settings
 commentary:
