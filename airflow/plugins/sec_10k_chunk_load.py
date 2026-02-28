@@ -67,8 +67,17 @@ def discover_extract_json_files(data_dir: Path) -> list[Path]:
     files: list[Path] = []
 
     for path in candidates:
-        # Keep only files that look like SEC extract output.
-        if "extract_output" in path.name.lower() or "10-k" in str(path).lower():
+        try:
+            payload = load_json_file(path)
+        except Exception:
+            continue
+
+        ticker = str(payload.get("ticker") or "").strip()
+        has_section_text = any(
+            str(payload.get(field) or "").strip()
+            for field in ("risk_text", "legal_text", "mda_text", "market_risk_text")
+        )
+        if ticker and has_section_text:
             files.append(path)
 
     return files

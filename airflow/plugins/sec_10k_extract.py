@@ -452,6 +452,45 @@ def _find_latest_downloaded_10k_html(save_directory: str, ticker: str) -> Path:
     return latest
 
 
+def _discover_latest_downloaded_10k_html_by_ticker(
+    save_directory: str,
+) -> dict[str, Path]:
+    """Discover latest downloaded 10-K HTML file per ticker under save_directory."""
+
+    base_dir = Path(save_directory).expanduser().resolve()
+    if not base_dir.exists() or not base_dir.is_dir():
+        raise ValueError(f"Invalid save directory: {base_dir}")
+
+    latest_by_ticker: dict[str, Path] = {}
+    sec_dir_name = "sec-edgar-filings"
+
+    for path in base_dir.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in {".htm", ".html"}:
+            continue
+
+        upper_path = str(path).upper()
+        if "10-K" not in upper_path:
+            continue
+
+        ticker = ""
+        parts = list(path.parts)
+        lower_parts = [part.lower() for part in parts]
+        if sec_dir_name in lower_parts:
+            sec_idx = lower_parts.index(sec_dir_name)
+            if sec_idx + 1 < len(parts):
+                ticker = parts[sec_idx + 1].strip().upper()
+
+        if not ticker:
+            continue
+
+        current = latest_by_ticker.get(ticker)
+        resolved = path.resolve()
+        if current is None or resolved.stat().st_mtime > current.stat().st_mtime:
+            latest_by_ticker[ticker] = resolved
+
+    return latest_by_ticker
+
+
 def _write_json_file(output_path: Path, payload: object) -> None:
     """Write JSON payload to disk, creating parent directories when needed."""
 
@@ -472,30 +511,19 @@ def _build_ticker_output_path(html_file: Path, ticker: str) -> Path:
     return html_file.parent / f"{ticker_prefix}_10k_extract_output.json"
 
 
-def extract_10k_payloads_from_downloaded_ticker_csv(
-    ticker_csv_file: str,
-    save_directory: str,
+def _extract_10k_payloads_for_html_files(
+    html_files_by_ticker: dict[str, Path],
     period: Optional[str] = None,
 ) -> dict[str, object]:
-    """Extract sections for each ticker using already downloaded 10-K HTML files."""
+    """Extract sections for provided ticker->HTML file mapping and write per-ticker JSON."""
 
-    tickers = load_tickers_from_csv(ticker_csv_file)
-    LOGGER.info(
-        "Starting extraction for %d ticker(s) using save directory: %s",
-        len(tickers),
-        Path(save_directory).expanduser().resolve(),
-    )
     results: dict[str, dict[str, str]] = {}
     errors: dict[str, str] = {}
     output_files: dict[str, str] = {}
 
-    for ticker in tickers:
+    for ticker, html_file in sorted(html_files_by_ticker.items()):
         LOGGER.info("Processing ticker: %s", ticker)
         try:
-            html_file = _find_latest_downloaded_10k_html(
-                save_directory=save_directory,
-                ticker=ticker,
-            )
             extracted_payload = extract_10k_payload_from_file(
                 input_file=str(html_file),
                 ticker=ticker,
@@ -513,7 +541,7 @@ def extract_10k_payloads_from_downloaded_ticker_csv(
 
     LOGGER.info(
         "Extraction run complete. Total: %d, Success: %d, Errors: %d",
-        len(tickers),
+        len(html_files_by_ticker),
         len(results),
         len(errors),
     )
@@ -521,10 +549,64 @@ def extract_10k_payloads_from_downloaded_ticker_csv(
         "results": results,
         "output_files": output_files,
         "errors": errors,
-        "total_tickers": len(tickers),
+        "total_tickers": len(html_files_by_ticker),
         "success_count": len(results),
         "error_count": len(errors),
     }
+
+
+def extract_10k_payloads_from_downloaded_directory(
+    save_directory: str,
+    period: Optional[str] = None,
+) -> dict[str, object]:
+    """Extract sections from latest downloaded 10-K HTML files found under save_directory."""
+
+    html_files_by_ticker = _discover_latest_downloaded_10k_html_by_ticker(
+        save_directory
+    )
+    if not html_files_by_ticker:
+        raise FileNotFoundError(
+            f"No downloaded 10-K HTML files found under '{Path(save_directory).expanduser().resolve()}'"
+        )
+
+    LOGGER.info(
+        "Starting extraction for %d ticker(s) using save directory: %s",
+        len(html_files_by_ticker),
+        Path(save_directory).expanduser().resolve(),
+    )
+    return _extract_10k_payloads_for_html_files(
+        html_files_by_ticker=html_files_by_ticker,
+        period=period,
+    )
+
+
+def extract_10k_payloads_from_downloaded_ticker_csv(
+    ticker_csv_file: str,
+    save_directory: str,
+    period: Optional[str] = None,
+) -> dict[str, object]:
+    """Extract sections for each ticker using already downloaded 10-K HTML files."""
+
+    tickers = load_tickers_from_csv(ticker_csv_file)
+    LOGGER.info(
+        "Starting extraction for %d ticker(s) using save directory: %s",
+        len(tickers),
+        Path(save_directory).expanduser().resolve(),
+    )
+    html_files_by_ticker: dict[str, Path] = {}
+    for ticker in tickers:
+        try:
+            html_files_by_ticker[ticker] = _find_latest_downloaded_10k_html(
+                save_directory=save_directory,
+                ticker=ticker,
+            )
+        except Exception as exc:
+            LOGGER.exception("Failed to locate downloaded HTML for ticker: %s", ticker)
+
+    return _extract_10k_payloads_for_html_files(
+        html_files_by_ticker=html_files_by_ticker,
+        period=period,
+    )
 
 
 def _configure_logging() -> None:
@@ -538,12 +620,7 @@ def _configure_logging() -> None:
 
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Extract Item 1A, Item 3, Item 7, and Item 7A from downloaded SEC 10-K HTML filings listed in a CSV."
-    )
-    parser.add_argument(
-        "--ticker-csv",
-        required=True,
-        help="Path to CSV file containing ticker list for extraction",
+        description="Extract Item 1A, Item 3, Item 7, and Item 7A from downloaded SEC 10-K HTML filings."
     )
     parser.add_argument(
         "--save-directory",
@@ -560,8 +637,7 @@ if __name__ == "__main__":
     _configure_logging()
     args = _build_arg_parser().parse_args()
 
-    payload = extract_10k_payloads_from_downloaded_ticker_csv(
-        ticker_csv_file=args.ticker_csv,
+    payload = extract_10k_payloads_from_downloaded_directory(
         save_directory=args.save_directory,
         period=args.period,
     )
