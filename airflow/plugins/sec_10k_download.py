@@ -12,6 +12,7 @@ import csv
 import datetime
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Dict, Optional, Set
 
@@ -20,6 +21,9 @@ from sec_edgar_downloader._Downloader import Downloader
 logger = logging.getLogger(__name__)
 
 DEFAULT_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "TestUser testuser@example.com")
+DEFAULT_REQUEST_PAUSE_SECONDS = float(
+    os.getenv("SEC_EDGAR_REQUEST_PAUSE_SECONDS", "1.0")
+)
 HTML_SUFFIXES = {".htm", ".html"}
 
 
@@ -123,6 +127,36 @@ def _pick_latest_html(candidate_files: Set[Path], ticker: str) -> Optional[Path]
     return max(pool, key=lambda path: path.stat().st_mtime)
 
 
+def _find_existing_10k_html(save_directory: Path, ticker: str) -> Optional[Path]:
+    """Find the latest already-downloaded 10-K HTML for a ticker.
+
+    The search first checks the canonical downloader directory:
+    ``<save_directory>/sec-edgar-filings/<TICKER>/10-K``.
+    If nothing is found there, it falls back to scanning ``save_directory``.
+
+    Args:
+        save_directory: Root directory where filings are stored.
+        ticker: Ticker symbol used for path/file filtering.
+
+    Returns:
+        Path to the latest matching HTML file, or ``None``.
+    """
+
+    ticker_upper = ticker.strip().upper()
+    if not ticker_upper:
+        return None
+
+    ticker_dir = save_directory / "sec-edgar-filings" / ticker_upper / "10-K"
+
+    existing_in_ticker_dir = _pick_latest_html(
+        _find_html_files(ticker_dir), ticker_upper
+    )
+    if existing_in_ticker_dir is not None:
+        return existing_in_ticker_dir
+
+    return _pick_latest_html(_find_html_files(save_directory), ticker_upper)
+
+
 def download_latest_10k(
     ticker: str,
     save_directory: str,
@@ -149,6 +183,16 @@ def download_latest_10k(
         raise ValueError("Ticker cannot be empty.")
 
     base_dir = Path(save_directory).expanduser().resolve()
+
+    existing_file = _find_existing_10k_html(base_dir, ticker_upper)
+    if existing_file is not None:
+        logger.info(
+            "Skipping download for %s; existing 10-K already present at %s",
+            ticker_upper,
+            existing_file,
+        )
+        return str(existing_file)
+
     downloader = _create_downloader(base_dir, user_agent)
 
     before_files = _find_html_files(base_dir)
@@ -251,6 +295,7 @@ def download_latest_10k_for_tickers(
     ticker_file: str,
     save_directory: str,
     user_agent: str = DEFAULT_USER_AGENT,
+    pause_seconds: float = DEFAULT_REQUEST_PAUSE_SECONDS,
 ) -> Dict[str, Optional[str]]:
     """Download latest 10-K filings for all tickers in a text file.
 
@@ -258,6 +303,7 @@ def download_latest_10k_for_tickers(
         ticker_file: Path to text file with ticker symbols.
         save_directory: Directory where filings are stored.
         user_agent: SEC-compliant User-Agent string.
+        pause_seconds: Seconds to sleep between SEC API calls.
 
     Returns:
         Mapping of ticker -> downloaded HTML path, or ``None`` when that ticker
@@ -272,7 +318,10 @@ def download_latest_10k_for_tickers(
     tickers = load_tickers_from_txt(ticker_file)
     results: Dict[str, Optional[str]] = {}
 
-    for ticker in tickers:
+    for index, ticker in enumerate(tickers):
+        if index > 0 and pause_seconds > 0:
+            time.sleep(pause_seconds)
+
         try:
             results[ticker] = download_latest_10k(
                 ticker=ticker,
@@ -324,6 +373,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         default=DEFAULT_USER_AGENT,
         help="SEC-compliant User-Agent",
     )
+    parser.add_argument(
+        "--pause-seconds",
+        type=float,
+        default=DEFAULT_REQUEST_PAUSE_SECONDS,
+        help="Seconds to wait between SEC API calls in batch mode",
+    )
     return parser
 
 
@@ -347,6 +402,7 @@ if __name__ == "__main__":
             ticker_file=ticker_file,
             save_directory=args.save_directory,
             user_agent=args.user_agent,
+            pause_seconds=args.pause_seconds,
         )
         print(output_map)
     else:

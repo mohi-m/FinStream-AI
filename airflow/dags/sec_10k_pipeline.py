@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-import shutil
+import csv
+import os
+import re
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -13,6 +16,10 @@ try:
     import sec_10k_extract  # type: ignore
 except ImportError as exc:  # pragma: no cover
     raise ImportError(f"Failed to import SEC 10-K plugin modules: {exc}")
+
+
+BATCH_SIZE = 100
+DEFAULT_BATCH_TEMP_ROOT = "/opt/airflow/sec_10k_tmp"
 
 
 def _resolve_paths() -> tuple[str, str]:
@@ -28,49 +35,101 @@ def _resolve_paths() -> tuple[str, str]:
     return str(ticker_csv), str(save_directory)
 
 
-def run_download_10k() -> dict[str, str | None]:
-    """Download latest 10-K HTML filings for tickers from plugins/tickers.csv."""
+def _build_batch_ticker_csv(batch_tickers: list[str]) -> str:
+    """Create a temporary CSV file with a single `ticker` column for one batch."""
 
-    ticker_csv, save_directory = _resolve_paths()
-    return sec_10k_download.download_latest_10k_for_tickers(
-        ticker_file=ticker_csv,
-        save_directory=save_directory,
+    temp_file = tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        newline="",
+        suffix=".csv",
+        delete=False,
     )
+    with temp_file as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["ticker"])
+        for ticker in batch_tickers:
+            writer.writerow([ticker])
+
+    return temp_file.name
 
 
-def run_extract_10k() -> dict[str, object]:
-    """Extract 10-K sections from downloaded HTML files in the save directory."""
+def _load_ticker_batches(batch_size: int = BATCH_SIZE) -> list[list[str]]:
+    """Load ticker symbols and split them into fixed-size batches."""
 
-    _, save_directory = _resolve_paths()
-    return sec_10k_extract.extract_10k_payloads_from_downloaded_directory(
-        save_directory=save_directory
+    ticker_csv, _ = _resolve_paths()
+    tickers = sec_10k_download.load_tickers_from_txt(ticker_csv)
+    return [
+        tickers[start : start + batch_size]
+        for start in range(0, len(tickers), batch_size)
+    ]
+
+
+def _sanitize_path_segment(value: str) -> str:
+    """Sanitize dynamic path segments for filesystem safety."""
+
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("._") or "unknown"
+
+
+def _resolve_batch_save_directory(batch_suffix: str, run_id: str) -> str:
+    """Build and create an isolated save directory per run and batch."""
+
+    configured_temp_root = os.getenv("SEC_10K_BATCH_TEMP_ROOT", "").strip()
+    base_path = (
+        Path(configured_temp_root).expanduser().resolve()
+        if configured_temp_root
+        else Path(DEFAULT_BATCH_TEMP_ROOT)
     )
+    batch_dir = (
+        base_path
+        / _sanitize_path_segment(run_id)
+        / _sanitize_path_segment(batch_suffix)
+    )
+    batch_dir.mkdir(parents=True, exist_ok=True)
+    return str(batch_dir)
 
 
-def run_chunk_embed_load_10k() -> int:
+def run_download_10k_batch(
+    batch_tickers: list[str],
+    batch_suffix: str,
+    run_id: str,
+) -> dict[str, str | None]:
+    """Download latest 10-K HTML filings for a single ticker batch."""
+
+    save_directory = _resolve_batch_save_directory(batch_suffix, run_id)
+    batch_file = _build_batch_ticker_csv(batch_tickers)
+    try:
+        return sec_10k_download.download_latest_10k_for_tickers(
+            ticker_file=batch_file,
+            save_directory=save_directory,
+        )
+    finally:
+        Path(batch_file).unlink(missing_ok=True)
+
+
+def run_extract_10k_batch(
+    batch_tickers: list[str],
+    batch_suffix: str,
+    run_id: str,
+) -> dict[str, object]:
+    """Extract 10-K sections for a single ticker batch."""
+
+    save_directory = _resolve_batch_save_directory(batch_suffix, run_id)
+    batch_file = _build_batch_ticker_csv(batch_tickers)
+    try:
+        return sec_10k_extract.extract_10k_payloads_from_downloaded_ticker_csv(
+            ticker_csv_file=batch_file,
+            save_directory=save_directory,
+        )
+    finally:
+        Path(batch_file).unlink(missing_ok=True)
+
+
+def run_chunk_embed_load_10k_batch(batch_suffix: str, run_id: str) -> int:
     """Chunk extracted text, generate embeddings, and load into pgvector."""
 
-    _, save_directory = _resolve_paths()
+    save_directory = _resolve_batch_save_directory(batch_suffix, run_id)
     return sec_10k_chunk_load.load_sec_filing_chunks_from_directory(save_directory)
-
-
-def cleanup_temp_10k_data() -> None:
-    """Delete temporary SEC 10-K artifacts created during this pipeline run."""
-
-    _, save_directory = _resolve_paths()
-    data_root = Path(save_directory)
-
-    sec_download_dir = data_root / "sec-edgar-filings"
-    if sec_download_dir.exists() and sec_download_dir.is_dir():
-        shutil.rmtree(sec_download_dir, ignore_errors=False)
-
-    for json_file in data_root.rglob("*_10k_extract_output.json"):
-        if json_file.is_file():
-            json_file.unlink()
-
-    for directory in sorted(data_root.rglob("*"), reverse=True):
-        if directory.is_dir() and not any(directory.iterdir()):
-            directory.rmdir()
 
 
 default_args = {
@@ -91,28 +150,42 @@ with DAG(
     catchup=False,
     tags=["finstream", "sec", "10k", "pgvector"],
 ) as dag:
-    download_latest_10k = PythonOperator(
-        task_id="download_latest_10k",
-        python_callable=run_download_10k,
-    )
+    ticker_batches = _load_ticker_batches(BATCH_SIZE)
+    previous_download_task: PythonOperator | None = None
 
-    extract_10k_sections = PythonOperator(
-        task_id="extract_10k_sections",
-        python_callable=run_extract_10k,
-    )
+    for batch_number, batch_tickers in enumerate(ticker_batches, start=1):
+        batch_suffix = f"batch_{batch_number:03d}"
+        batch_op_kwargs = {
+            "batch_tickers": batch_tickers,
+            "batch_suffix": batch_suffix,
+            "run_id": "{{ run_id }}",
+        }
 
-    chunk_embed_load_10k = PythonOperator(
-        task_id="chunk_embed_load_10k",
-        python_callable=run_chunk_embed_load_10k,
-    )
+        download_latest_10k = PythonOperator(
+            task_id=f"download_latest_10k_{batch_suffix}",
+            python_callable=run_download_10k_batch,
+            op_kwargs=batch_op_kwargs,
+        )
 
-    delete_temp_10k_data = PythonOperator(
-        task_id="delete_temp_10k_data",
-        python_callable=cleanup_temp_10k_data,
-    )
+        extract_10k_sections = PythonOperator(
+            task_id=f"extract_10k_sections_{batch_suffix}",
+            python_callable=run_extract_10k_batch,
+            op_kwargs=batch_op_kwargs,
+        )
 
-    download_latest_10k.set_downstream(extract_10k_sections)
-    extract_10k_sections.set_downstream(chunk_embed_load_10k)
-    chunk_embed_load_10k.set_downstream(delete_temp_10k_data)
+        chunk_embed_load_10k = PythonOperator(
+            task_id=f"chunk_embed_load_10k_{batch_suffix}",
+            python_callable=run_chunk_embed_load_10k_batch,
+            op_kwargs={
+                "batch_suffix": batch_suffix,
+                "run_id": "{{ run_id }}",
+            },
+        )
 
-    download_latest_10k >> extract_10k_sections >> chunk_embed_load_10k >> delete_temp_10k_data # type: ignore
+        if previous_download_task is not None:
+            previous_download_task.set_downstream(download_latest_10k)
+
+        download_latest_10k.set_downstream(extract_10k_sections)
+        extract_10k_sections.set_downstream(chunk_embed_load_10k)
+
+        previous_download_task = download_latest_10k
