@@ -17,6 +17,7 @@ from pgvector.psycopg2 import register_vector
 
 logger = logging.getLogger(__name__)
 
+# ToDo: Tune the chunk size and overlap
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 DEFAULT_MODEL = "text-embedding-3-small"
@@ -34,21 +35,6 @@ DO UPDATE SET
 """
 
 
-def configure_logging() -> None:
-    """Configure console logging for script execution."""
-    logging.basicConfig(
-        level=os.getenv("SEC_CHUNK_LOG_LEVEL", "INFO").upper(),
-        format="%(asctime)s | %(levelname)s | %(message)s",
-    )
-
-
-def load_environment() -> None:
-    """Load variables from the nearest .env file."""
-    env_path = find_dotenv(usecwd=True)
-    if env_path:
-        load_dotenv(env_path)
-
-
 def get_db_connection() -> psycopg2.extensions.connection:
     """Create a PostgreSQL connection using .env settings."""
     return psycopg2.connect(
@@ -63,14 +49,12 @@ def get_db_connection() -> psycopg2.extensions.connection:
 
 def discover_extract_json_files(data_dir: Path) -> list[Path]:
     """Recursively find extract JSON files under the input data directory."""
+
     candidates = [path for path in data_dir.rglob("*.json") if path.is_file()]
     files: list[Path] = []
 
     for path in candidates:
-        try:
-            payload = load_json_file(path)
-        except Exception:
-            continue
+        payload = load_json_file(path)
 
         ticker = str(payload.get("ticker") or "").strip()
         has_section_text = any(
@@ -103,30 +87,7 @@ def parse_year(payload: dict[str, Any]) -> int:
     return year
 
 
-def parse_filing_type(file_path: Path, payload: dict[str, Any]) -> str:
-    """Resolve filing type from payload or file path."""
-    from_payload = str(payload.get("filing_type") or payload.get("form") or "").upper()
-    if from_payload in {"10-K", "10-Q"}:
-        return from_payload
-
-    path_text = str(file_path).upper()
-    if "10-Q" in path_text:
-        return "10-Q"
-    return "10-K"
-
-
-def parse_filing_period(filing_type: str, payload: dict[str, Any]) -> str:
-    """Resolve filing period with simple defaults."""
-    if filing_type == "10-K":
-        return "FY"
-
-    period = str(payload.get("filing_period") or payload.get("period") or "Q1").upper()
-    if period.startswith("Q") and len(period) == 2:
-        return period
-    return "Q1"
-
-
-def build_item_texts(payload: dict[str, Any], filing_type: str) -> dict[str, str]:
+def build_item_texts(payload: dict[str, Any]) -> dict[str, str]:
     """Map extract fields to SEC item codes for chunking."""
     item_texts = {
         "item_1a": str(payload.get("risk_text") or "").strip(),
@@ -134,15 +95,6 @@ def build_item_texts(payload: dict[str, Any], filing_type: str) -> dict[str, str
         "item_7": str(payload.get("mda_text") or "").strip(),
         "item_7a": str(payload.get("market_risk_text") or "").strip(),
     }
-
-    # Use 10-Q equivalents when needed.
-    if filing_type == "10-Q":
-        item_texts = {
-            "item_1a": item_texts["item_1a"],
-            "item_1": item_texts["item_3"],
-            "item_2": item_texts["item_7"],
-            "item_3": item_texts["item_7a"],
-        }
 
     return {key: value for key, value in item_texts.items() if value}
 
@@ -161,13 +113,6 @@ def chunk_item_texts(item_texts: dict[str, str]) -> list[tuple[str, int, str]]:
             chunks.append((item_code, chunk_index, chunk_text))
     return chunks
 
-
-def embed_chunks(
-    embedder: OpenAIEmbeddings, chunks: list[tuple[str, int, str]]
-) -> list[list[float]]:
-    """Generate embeddings for chunk text."""
-    texts = [chunk_text for _, _, chunk_text in chunks]
-    return embedder.embed_documents(texts)
 
 
 def upsert_chunks(
@@ -208,13 +153,11 @@ def process_extract_file(
     payload = load_json_file(file_path)
 
     ticker = str(payload.get("ticker", "")).strip().upper()
-    if not ticker:
-        raise ValueError("Missing ticker.")
 
     filing_year = parse_year(payload)
-    filing_type = parse_filing_type(file_path, payload)
-    filing_period = parse_filing_period(filing_type, payload)
-    item_texts = build_item_texts(payload, filing_type)
+    filing_type = "10-K"
+    filing_period = "FY"
+    item_texts = build_item_texts(payload)
     if not item_texts:
         logger.warning("No supported item text found in %s", file_path)
         return 0
@@ -223,7 +166,9 @@ def process_extract_file(
     if not chunks:
         return 0
 
-    embeddings = embed_chunks(embedder, chunks)
+    texts = [chunk_text for _, _, chunk_text in chunks]
+    embeddings = embedder.embed_documents(texts)
+
     inserted = upsert_chunks(
         conn=conn,
         ticker=ticker,
@@ -239,7 +184,6 @@ def process_extract_file(
 
 def load_sec_filing_chunks_from_directory(data_dir: str) -> int:
     """Load all SEC extract JSON files under a data directory."""
-    load_environment()
 
     root = Path(data_dir)
     if not root.exists() or not root.is_dir():
@@ -253,8 +197,7 @@ def load_sec_filing_chunks_from_directory(data_dir: str) -> int:
         logger.warning("No extract JSON files found under %s", data_dir)
         return 0
 
-    model_name = os.getenv("OPENAI_EMBEDDING_MODEL", DEFAULT_MODEL)
-    embedder = OpenAIEmbeddings(model=model_name)
+    embedder = OpenAIEmbeddings(model=DEFAULT_MODEL)
 
     total_chunks = 0
     conn = get_db_connection()
@@ -282,7 +225,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
         description="Chunk, embed, and load SEC filing extracts."
     )
     parser.add_argument(
-        "--data-dir",
+        "--save-directory",
         required=True,
         help="Root directory containing extracted JSON files.",
     )
@@ -291,7 +234,16 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     """CLI entrypoint."""
-    configure_logging()
-    load_environment()
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    )
+
+    env_path = find_dotenv(usecwd=True)
+    if env_path:
+        load_dotenv(env_path)
+
     args = build_argument_parser().parse_args()
-    load_sec_filing_chunks_from_directory(args.data_dir)
+
+    load_sec_filing_chunks_from_directory(args.save_directory)
+
+    logger.info("Finished loading SEC filing chunks to pgvector database")

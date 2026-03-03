@@ -56,7 +56,7 @@ def download_latest_10k(ticker: str, save_directory: str) -> None:
     )
 
     # ToDo - Make it config driven
-    after_date = datetime.date(2025, 1, 1)
+    after_date = datetime.date(2025, 6, 1)
 
     try:
         downloader.get("10-K", ticker, after=after_date, download_details=True)

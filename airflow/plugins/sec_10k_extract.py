@@ -50,6 +50,10 @@ LEGAL_HEADER_RE = re.compile(r"(?i)\bitem\s*3\b\s*[\.:\-–—]*\s*legal\s+proce
 MARKET_RISK_HEADER_RE = re.compile(
     r"(?i)\bitem\s*7a\b\s*[\.:\-–—]*\s*quantitative\s+and\s+qualitative\s+disclosures\s+about\s+market\s+risk"
 )
+RISK_ITEM_ONLY_RE = re.compile(r"(?i)^\s*item\s*1a\b")
+LEGAL_ITEM_ONLY_RE = re.compile(r"(?i)^\s*item\s*3\b")
+MDA_ITEM_ONLY_RE = re.compile(r"(?i)^\s*item\s*7\b")
+MARKET_RISK_ITEM_ONLY_RE = re.compile(r"(?i)^\s*item\s*7a\b")
 GENERIC_ITEM_RE = re.compile(r"(?i)^\s*item\s*\d+[a-z]?\b")
 MDA_END_RE = re.compile(
     r"(?i)^\s*(item\s*7a\b|item\s*8\b|item\s*9\b|part\s*iii\b|signatures?\b)"
@@ -154,32 +158,62 @@ def _build_blocks(soup: BeautifulSoup) -> list[dict[str, object]]:
 def _find_toc_index(blocks: list[dict[str, object]]) -> int:
     """Find the last likely TOC index to avoid matching TOC item entries."""
 
-    toc_idx = -1
-    for i, block in enumerate(blocks):
-        text = str(block["text"])
-        if re.search(r"(?i)table\s+of\s+contents", text):
-            toc_idx = i
+    toc_candidates = [
+        i
+        for i, block in enumerate(blocks)
+        if re.search(r"(?i)table\s+of\s+contents", str(block["text"]))
+    ]
+    for toc_idx in toc_candidates:
+        end_idx = toc_idx
+        item_hits = 0
 
-    if toc_idx == -1:
+        # Extend TOC region through short Item-like lines immediately after TOC heading.
+        for j in range(toc_idx + 1, min(len(blocks), toc_idx + 250)):
+            text = str(blocks[j]["text"])
+            if GENERIC_ITEM_RE.search(text) and len(text) < 220:
+                end_idx = j
+                item_hits += 1
+                continue
+            if item_hits > 0:
+                break
+
+        # Use the earliest TOC candidate that is followed by a real Item listing.
+        if item_hits >= 5:
+            return end_idx
+
+    # Fallback for filings where "Table of Contents" text is not emitted as a block:
+    # infer TOC from a dense early cluster of short Item lines.
+    item_indices = [
+        i
+        for i, block in enumerate(blocks)
+        if GENERIC_ITEM_RE.search(str(block["text"])) and len(str(block["text"])) < 220
+    ]
+    if not item_indices:
         return -1
 
-    # Extend TOC region through short Item-like lines immediately after TOC heading.
-    end_idx = toc_idx
-    for j in range(toc_idx + 1, min(len(blocks), toc_idx + 150)):
-        text = str(blocks[j]["text"])
-        if GENERIC_ITEM_RE.search(text) and len(text) < 220:
-            end_idx = j
-            continue
-        if end_idx > toc_idx:
+    max_start_scan = min(len(blocks), 1800)
+    for start_pos, start_idx in enumerate(item_indices):
+        if start_idx > max_start_scan:
             break
 
-    return end_idx
+        cluster = [start_idx]
+        for next_idx in item_indices[start_pos + 1 :]:
+            if next_idx - cluster[-1] <= 30:
+                cluster.append(next_idx)
+                continue
+            break
+
+        if len(cluster) >= 8:
+            return cluster[-1]
+
+    return -1
 
 
 def _find_header_index(
     blocks: list[dict[str, object]],
     header_re: re.Pattern[str],
     toc_end_idx: int,
+    fallback_item_re: Optional[re.Pattern[str]] = None,
 ) -> Optional[int]:
     """Find first matching section header after TOC; prefer bold-like blocks."""
 
@@ -193,6 +227,16 @@ def _find_header_index(
             candidates.append(i)
             if bool(block["is_bold"]) or _looks_like_heading_text(text):
                 heading_like_candidates.append(i)
+
+    if not candidates and fallback_item_re is not None:
+        for i, block in enumerate(blocks):
+            if i <= toc_end_idx:
+                continue
+            text = str(block["text"])
+            if fallback_item_re.search(text):
+                candidates.append(i)
+                if bool(block["is_bold"]) or _looks_like_heading_text(text):
+                    heading_like_candidates.append(i)
 
     if not candidates:
         return None
@@ -264,10 +308,21 @@ def extract_sections(html_content: str) -> dict[str, str]:
         }
 
     toc_end_idx = _find_toc_index(blocks)
-    risk_idx = _find_header_index(blocks, RISK_HEADER_RE, toc_end_idx)
-    legal_idx = _find_header_index(blocks, LEGAL_HEADER_RE, toc_end_idx)
-    mda_idx = _find_header_index(blocks, MDA_HEADER_RE, toc_end_idx)
-    market_risk_idx = _find_header_index(blocks, MARKET_RISK_HEADER_RE, toc_end_idx)
+    risk_idx = _find_header_index(
+        blocks, RISK_HEADER_RE, toc_end_idx, fallback_item_re=RISK_ITEM_ONLY_RE
+    )
+    legal_idx = _find_header_index(
+        blocks, LEGAL_HEADER_RE, toc_end_idx, fallback_item_re=LEGAL_ITEM_ONLY_RE
+    )
+    mda_idx = _find_header_index(
+        blocks, MDA_HEADER_RE, toc_end_idx, fallback_item_re=MDA_ITEM_ONLY_RE
+    )
+    market_risk_idx = _find_header_index(
+        blocks,
+        MARKET_RISK_HEADER_RE,
+        toc_end_idx,
+        fallback_item_re=MARKET_RISK_ITEM_ONLY_RE,
+    )
 
     risk_end = (
         _next_boundary_index(blocks, risk_idx, RISK_END_RE)
@@ -471,8 +526,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
     )
     args = _build_arg_parser().parse_args()
 
