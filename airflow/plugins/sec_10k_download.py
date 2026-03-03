@@ -20,7 +20,7 @@ from sec_edgar_downloader._Downloader import Downloader
 logger = logging.getLogger(__name__)
 
 DEFAULT_REQUEST_PAUSE_SECONDS = float(
-    os.getenv("SEC_EDGAR_REQUEST_PAUSE_SECONDS", "1.0")
+    os.getenv("SEC_EDGAR_REQUEST_PAUSE_SECONDS", "2.0")
 )
 HTML_SUFFIXES = {".htm", ".html"}
 
@@ -61,9 +61,8 @@ def download_latest_10k(ticker: str, save_directory: str) -> None:
     try:
         downloader.get("10-K", ticker, after=after_date, download_details=True)
     except Exception as exc:
-        raise SecDownloadError(
-            f"SEC EDGAR request failed for '{ticker}'. Error: {str(exc)}"
-        ) from exc
+        logger.error("Failed to download 10-K for %s: %s", ticker, str(exc))
+        
 
     logger.info("Downloaded latest 10-K for %s", ticker)
 

@@ -15,6 +15,7 @@ except ImportError as exc:  # pragma: no cover
 
 
 def _run_download(batch_csv_path: str, save_directory: str) -> None:
+    Path(save_directory).mkdir(parents=True, exist_ok=True)
     sec_10k_download.download_latest_10k_for_tickers(
         ticker_csv=batch_csv_path,
         save_directory=save_directory,
@@ -50,9 +51,8 @@ with DAG(
     catchup=False,
     tags=["finstream", "sec", "10k"],
 ) as dag:
-    project_root = Path(__file__).resolve().parents[2]
     plugin_dir = Path(__file__).resolve().parents[1] / "plugins"
-    base_save_dir = project_root / "sec_data"
+    base_save_dir = Path("/opt/airflow/tmp")
 
     batch_files = [
         "tickers_batch_001.csv",
