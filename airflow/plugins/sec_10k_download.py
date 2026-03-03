@@ -14,7 +14,6 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Dict, Optional, Set
 
 from sec_edgar_downloader._Downloader import Downloader
 
@@ -178,6 +177,8 @@ if __name__ == "__main__":
         level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
     )
     args = _build_arg_parser().parse_args()
+
+    logger.info("Save Directory: %s", args.save_directory)
 
     download_latest_10k_for_tickers(
         ticker_csv=args.ticker_csv,

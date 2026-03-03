@@ -14,7 +14,6 @@ This module is designed for use inside Airflow tasks and supports:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import logging
 import re
@@ -25,7 +24,7 @@ from typing import Optional
 from bs4 import BeautifulSoup, Tag
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 BLOCK_TAGS = {
@@ -43,7 +42,6 @@ BLOCK_TAGS = {
     "h5",
     "h6",
 }
-
 MDA_HEADER_RE = re.compile(
     r"(?i)\bitem\s*7\b\s*[\.:\-–—]*\s*management['’`s\s]+discussion\s+and\s+analysis"
 )
@@ -52,7 +50,6 @@ LEGAL_HEADER_RE = re.compile(r"(?i)\bitem\s*3\b\s*[\.:\-–—]*\s*legal\s+proce
 MARKET_RISK_HEADER_RE = re.compile(
     r"(?i)\bitem\s*7a\b\s*[\.:\-–—]*\s*quantitative\s+and\s+qualitative\s+disclosures\s+about\s+market\s+risk"
 )
-
 GENERIC_ITEM_RE = re.compile(r"(?i)^\s*item\s*\d+[a-z]?\b")
 MDA_END_RE = re.compile(
     r"(?i)^\s*(item\s*7a\b|item\s*8\b|item\s*9\b|part\s*iii\b|signatures?\b)"
@@ -62,7 +59,6 @@ LEGAL_END_RE = re.compile(r"(?i)^\s*(item\s*4\b|part\s*ii\b)")
 MARKET_RISK_END_RE = re.compile(
     r"(?i)^\s*(item\s*8\b|item\s*9\b|part\s*iii\b|signatures?\b)"
 )
-
 PERIOD_RE = re.compile(
     r"(?i)for\s+the\s+fiscal\s+year\s+ended\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})"
 )
@@ -268,7 +264,6 @@ def extract_sections(html_content: str) -> dict[str, str]:
         }
 
     toc_end_idx = _find_toc_index(blocks)
-
     risk_idx = _find_header_index(blocks, RISK_HEADER_RE, toc_end_idx)
     legal_idx = _find_header_index(blocks, LEGAL_HEADER_RE, toc_end_idx)
     mda_idx = _find_header_index(blocks, MDA_HEADER_RE, toc_end_idx)
@@ -308,7 +303,7 @@ def extract_sections(html_content: str) -> dict[str, str]:
     }
 
 
-def extract_10q_payload(
+def extract_10k_payload(
     html_content: str,
     ticker: str,
     period: Optional[str] = None,
@@ -336,122 +331,6 @@ def extract_10q_payload(
     }
 
 
-def extract_10q_payload_from_file(
-    input_file: str,
-    ticker: str,
-    period: Optional[str] = None,
-) -> dict[str, str]:
-    """Read a local raw 10-K HTML file and return extracted payload.
-
-    Note:
-        Function name is retained for backward compatibility. Prefer
-        ``extract_10k_payload_from_file`` in new code.
-    """
-
-    html_path = Path(input_file).expanduser().resolve()
-    html_content = html_path.read_text(encoding="utf-8", errors="ignore")
-    return extract_10q_payload(html_content=html_content, ticker=ticker, period=period)
-
-
-def extract_10k_payload(
-    html_content: str,
-    ticker: str,
-    period: Optional[str] = None,
-) -> dict[str, str]:
-    """Build JSON-ready 10-K extraction payload for Airflow tasks."""
-
-    return extract_10q_payload(html_content=html_content, ticker=ticker, period=period)
-
-
-def extract_10k_payload_from_file(
-    input_file: str,
-    ticker: str,
-    period: Optional[str] = None,
-) -> dict[str, str]:
-    """Read a local raw 10-K HTML file and return extracted payload."""
-
-    return extract_10q_payload_from_file(
-        input_file=input_file, ticker=ticker, period=period
-    )
-
-
-def load_tickers_from_csv(ticker_csv_file: str) -> list[str]:
-    """Load ticker symbols from CSV.
-
-    Supports either:
-    - A header row with a ``ticker`` column, or
-    - Plain rows/cells containing ticker symbols.
-    """
-
-    path = Path(ticker_csv_file).expanduser().resolve()
-    if not path.exists():
-        raise FileNotFoundError(f"Ticker CSV file not found: {path}")
-
-    content = path.read_text(encoding="utf-8").strip()
-    if not content:
-        raise ValueError(f"Ticker CSV file is empty: {path}")
-
-    tickers: list[str] = []
-
-    reader = csv.reader(content.splitlines())
-    first_row = next(reader, [])
-    first_row_norm = [cell.strip().lower() for cell in first_row]
-    has_ticker_header = "ticker" in first_row_norm
-
-    if has_ticker_header:
-        dict_reader = csv.DictReader(content.splitlines())
-        for row in dict_reader:
-            symbol = (row.get("ticker") or row.get("Ticker") or "").strip().upper()
-            if symbol:
-                tickers.append(symbol)
-    else:
-        for row in csv.reader(content.splitlines()):
-            for cell in row:
-                symbol = cell.strip().upper()
-                if symbol:
-                    tickers.append(symbol)
-
-    deduped = list(dict.fromkeys(tickers))
-    if not deduped:
-        raise ValueError(f"No valid ticker symbols found in CSV: {path}")
-
-    LOGGER.info("Loaded %d ticker(s) from CSV: %s", len(deduped), path)
-    return deduped
-
-
-def _find_latest_downloaded_10k_html(save_directory: str, ticker: str) -> Path:
-    """Find the latest downloaded 10-K HTML file for a ticker under save_directory."""
-
-    base_dir = Path(save_directory).expanduser().resolve()
-    ticker_upper = (ticker or "").strip().upper()
-    if not ticker_upper:
-        raise ValueError("Ticker cannot be empty")
-
-    ticker_dir = base_dir / "sec-edgar-filings" / ticker_upper / "10-K"
-    search_roots = [ticker_dir, base_dir]
-
-    candidates: list[Path] = []
-    for root in search_roots:
-        if not root.exists():
-            continue
-        for path in root.rglob("*"):
-            if not path.is_file() or path.suffix.lower() not in {".htm", ".html"}:
-                continue
-
-            upper_path = str(path).upper()
-            if ticker_upper in upper_path and "10-K" in upper_path:
-                candidates.append(path.resolve())
-
-    if not candidates:
-        raise FileNotFoundError(
-            f"No downloaded 10-K HTML file found for ticker '{ticker_upper}' under '{base_dir}'"
-        )
-
-    latest = max(candidates, key=lambda file_path: file_path.stat().st_mtime)
-    LOGGER.debug("Selected latest 10-K HTML for %s: %s", ticker_upper, latest)
-    return latest
-
-
 def _discover_latest_downloaded_10k_html_by_ticker(
     save_directory: str,
 ) -> dict[str, Path]:
@@ -465,11 +344,7 @@ def _discover_latest_downloaded_10k_html_by_ticker(
     sec_dir_name = "sec-edgar-filings"
 
     for path in base_dir.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in {".htm", ".html"}:
-            continue
-
-        upper_path = str(path).upper()
-        if "10-K" not in upper_path:
+        if not path.is_file() or path.suffix not in {".html"}:
             continue
 
         ticker = ""
@@ -477,8 +352,7 @@ def _discover_latest_downloaded_10k_html_by_ticker(
         lower_parts = [part.lower() for part in parts]
         if sec_dir_name in lower_parts:
             sec_idx = lower_parts.index(sec_dir_name)
-            if sec_idx + 1 < len(parts):
-                ticker = parts[sec_idx + 1].strip().upper()
+            ticker = parts[sec_idx + 1]
 
         if not ticker:
             continue
@@ -499,7 +373,7 @@ def _write_json_file(output_path: Path, payload: object) -> None:
         json.dumps(payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    LOGGER.info("Wrote JSON output: %s", output_path)
+    logger.info("Wrote JSON output: %s", output_path)
 
 
 def _build_ticker_output_path(html_file: Path, ticker: str) -> Path:
@@ -521,25 +395,25 @@ def _extract_10k_payloads_for_html_files(
     errors: dict[str, str] = {}
     output_files: dict[str, str] = {}
 
-    for ticker, html_file in sorted(html_files_by_ticker.items()):
-        LOGGER.info("Processing ticker: %s", ticker)
+    for ticker, html_file in html_files_by_ticker.items():
+        logger.info("Processing ticker: %s", ticker)
         try:
-            extracted_payload = extract_10k_payload_from_file(
-                input_file=str(html_file),
-                ticker=ticker,
-                period=period,
+            html_path = html_file.expanduser().resolve()
+            html_content = html_path.read_text(encoding="utf-8", errors="ignore")
+            extracted_payload = extract_10k_payload(
+                html_content=html_content, ticker=ticker, period=period
             )
             results[ticker] = extracted_payload
 
             ticker_output_path = _build_ticker_output_path(html_file, ticker)
             _write_json_file(ticker_output_path, extracted_payload)
             output_files[ticker] = str(ticker_output_path)
-            LOGGER.info("Completed ticker: %s", ticker)
+            logger.info("Completed ticker: %s", ticker)
         except Exception as exc:
             errors[ticker] = str(exc)
-            LOGGER.exception("Failed ticker: %s", ticker)
+            logger.exception("Failed ticker: %s", ticker)
 
-    LOGGER.info(
+    logger.info(
         "Extraction run complete. Total: %d, Success: %d, Errors: %d",
         len(html_files_by_ticker),
         len(results),
@@ -569,7 +443,7 @@ def extract_10k_payloads_from_downloaded_directory(
             f"No downloaded 10-K HTML files found under '{Path(save_directory).expanduser().resolve()}'"
         )
 
-    LOGGER.info(
+    logger.info(
         "Starting extraction for %d ticker(s) using save directory: %s",
         len(html_files_by_ticker),
         Path(save_directory).expanduser().resolve(),
@@ -577,44 +451,6 @@ def extract_10k_payloads_from_downloaded_directory(
     return _extract_10k_payloads_for_html_files(
         html_files_by_ticker=html_files_by_ticker,
         period=period,
-    )
-
-
-def extract_10k_payloads_from_downloaded_ticker_csv(
-    ticker_csv_file: str,
-    save_directory: str,
-    period: Optional[str] = None,
-) -> dict[str, object]:
-    """Extract sections for each ticker using already downloaded 10-K HTML files."""
-
-    tickers = load_tickers_from_csv(ticker_csv_file)
-    LOGGER.info(
-        "Starting extraction for %d ticker(s) using save directory: %s",
-        len(tickers),
-        Path(save_directory).expanduser().resolve(),
-    )
-    html_files_by_ticker: dict[str, Path] = {}
-    for ticker in tickers:
-        try:
-            html_files_by_ticker[ticker] = _find_latest_downloaded_10k_html(
-                save_directory=save_directory,
-                ticker=ticker,
-            )
-        except Exception as exc:
-            LOGGER.exception("Failed to locate downloaded HTML for ticker: %s", ticker)
-
-    return _extract_10k_payloads_for_html_files(
-        html_files_by_ticker=html_files_by_ticker,
-        period=period,
-    )
-
-
-def _configure_logging() -> None:
-    """Configure console logging for script execution."""
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
     )
 
 
@@ -634,14 +470,17 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
-    _configure_logging()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+    )
     args = _build_arg_parser().parse_args()
 
     payload = extract_10k_payloads_from_downloaded_directory(
         save_directory=args.save_directory,
         period=args.period,
     )
-    LOGGER.info(
+    logger.info(
         "Extraction complete. Success: %s, Errors: %s",
         payload["success_count"],
         payload["error_count"],
