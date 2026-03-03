@@ -15,13 +15,11 @@ x-airflow-common:
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
-    SEC_10K_BATCH_TEMP_ROOT: /opt/airflow/sec_10k_tmp
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/tmp/sec_10k:/opt/airflow/sec_10k_tmp
   user: "${AIRFLOW_UID:-1000}:0"
   depends_on: &airflow-common-depends-on {}
 
@@ -127,14 +125,14 @@ services:
         echo
         echo "Creating missing opt dirs if missing:"
         echo
-        mkdir -v -p /opt/airflow/{logs,dags,plugins,config,sec_10k_tmp}
+        mkdir -v -p /opt/airflow/{logs,dags,plugins,config}
         echo
         echo "Airflow version:"
         /entrypoint airflow version
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sec_10k_tmp}
+        ls -la /opt/airflow/{logs,dags,plugins,config}
         echo
         echo "Running airflow config list to create default config file if missing."
         echo
@@ -142,7 +140,7 @@ services:
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sec_10k_tmp}
+        ls -la /opt/airflow/{logs,dags,plugins,config}
         echo
         echo "Change ownership of files in /opt/airflow to ${AIRFLOW_UID}:0"
         echo
@@ -150,11 +148,11 @@ services:
         echo
         echo "Change ownership of files in shared volumes to ${AIRFLOW_UID}:0"
         echo
-        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config,sec_10k_tmp}
+        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config}
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sec_10k_tmp}
+        ls -la /opt/airflow/{logs,dags,plugins,config}
 
     # yamllint enable rule:line-length
     environment:
