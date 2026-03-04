@@ -26,6 +26,7 @@ from bs4 import BeautifulSoup, Tag
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_FILING_YEAR = "2025"
 
 BLOCK_TAGS = {
     "p",

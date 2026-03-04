@@ -9,6 +9,9 @@ import yfinance as yf
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def setup_logger(verbose: bool) -> logging.Logger:

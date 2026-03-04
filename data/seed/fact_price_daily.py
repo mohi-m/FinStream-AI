@@ -11,12 +11,15 @@ from psycopg2 import sql
 from psycopg2.extras import execute_values
 import yfinance as yf
 import pandas as pd
+from dotenv import load_dotenv
 
 
 # --------------------------
 # Utilities / Setup
 # --------------------------
 
+# Load dotenv file
+load_dotenv()
 
 def setup_logger(verbose: bool) -> logging.Logger:
     level = logging.DEBUG if verbose else logging.INFO
