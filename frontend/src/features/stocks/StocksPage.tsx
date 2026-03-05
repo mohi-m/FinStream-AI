@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TickerCard, TickerDetail, TickerSearch } from './components'
+import { IndexTickerCard, TickerCard, TickerDetail, TickerSearch } from './components'
 import { useWatchlist } from './hooks/useWatchlist'
 import type { TickerDto } from '@/lib/api'
 
@@ -10,6 +10,10 @@ const TOP_TICKERS: { tickerId: string; companyName: string }[] = [
   { tickerId: 'AMZN', companyName: 'Amazon.com Inc.' },
   { tickerId: 'NVDA', companyName: 'NVIDIA Corporation' },
   { tickerId: 'GOOGL', companyName: 'Alphabet Inc.' },
+]
+
+const INDEX_TICKERS: { tickerId: string; companyName: string }[] = [
+  { tickerId: '^GSPC', companyName: 'S&P 500 Index' },
 ]
 
 export function StocksPage() {
@@ -56,9 +60,20 @@ export function StocksPage() {
         </div>
       )}
 
-      {/* Top S&P 500 Tickers */}
+      {/* Tickers */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Top S&P 500 Stocks</h2>
+        <h2 className="text-xl font-semibold mb-4">S&P 500 Index</h2>
+        <div className="mb-4">
+          {INDEX_TICKERS.map((ticker) => (
+            <IndexTickerCard
+              key={ticker.tickerId}
+              tickerId={ticker.tickerId}
+              companyName={ticker.companyName}
+              onClick={() => setSelectedTicker(ticker.tickerId)}
+            />
+          ))}
+        </div>
+        <h2 className="text-xl font-semibold mb-4">Top Stocks</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {TOP_TICKERS.map((ticker) => (
             <TickerCard

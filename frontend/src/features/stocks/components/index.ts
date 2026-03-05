@@ -1,3 +1,4 @@
 export * from './TickerCard'
+export * from './IndexTickerCard'
 export * from './TickerDetail'
 export * from './TickerSearch'
