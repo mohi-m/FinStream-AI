@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Button,
   Card,
@@ -6,7 +6,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Badge,
   Skeleton,
   Table,
   TableBody,
@@ -14,6 +13,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui'
 import { EmptyState, ErrorState, Loading } from '@/components/common'
 import { usePortfolios, useHoldings, useDeletePortfolio, useDeleteHolding } from './hooks'
@@ -22,6 +26,7 @@ import {
   HoldingDialog,
   DeleteConfirmDialog,
   PortfolioAnalytics,
+  PortfolioCommentary,
 } from './components'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Plus, Edit, Trash2, Briefcase, MoreHorizontal } from 'lucide-react'
@@ -50,6 +55,13 @@ export function PortfoliosPage() {
   } = usePortfolios()
   const portfolios = portfoliosData?.content || []
   const selectedPortfolio = portfolios.find((p) => p.portfolioId === selectedPortfolioId)
+
+  // Auto-select the first portfolio when portfolios load
+  useEffect(() => {
+    if (portfolios.length > 0 && !selectedPortfolioId) {
+      setSelectedPortfolioId(portfolios[0].portfolioId || null)
+    }
+  }, [portfolios, selectedPortfolioId])
 
   const { data: holdingsData, isLoading: holdingsLoading } = useHoldings(selectedPortfolioId || '')
   const holdings = holdingsData?.content || []
@@ -116,10 +128,51 @@ export function PortfoliosPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Portfolio Dropdown */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Portfolios</h1>
-          <p className="text-muted-foreground">Manage your investment portfolios</p>
+          {portfolios.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedPortfolioId || ''}
+                onValueChange={(value) => setSelectedPortfolioId(value)}
+              >
+                <SelectTrigger className="w-55">
+                  <SelectValue placeholder="Select portfolio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {portfolios.map((portfolio) => (
+                    <SelectItem key={portfolio.portfolioId} value={portfolio.portfolioId || ''}>
+                      {portfolio.portfolioName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPortfolio && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => handleEditPortfolio(selectedPortfolio)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Portfolio
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => setDeletePortfolioOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Portfolio
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
         </div>
         <Button onClick={handleCreatePortfolio}>
           <Plus className="h-4 w-4 mr-2" />
@@ -127,85 +180,31 @@ export function PortfoliosPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Portfolio List */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Your Portfolios</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {portfolios.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No portfolios yet</p>
-                  <Button variant="link" onClick={handleCreatePortfolio}>
-                    Create your first portfolio
-                  </Button>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {portfolios.map((portfolio) => (
-                    <div
-                      key={portfolio.portfolioId}
-                      className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
-                        selectedPortfolioId === portfolio.portfolioId ? 'bg-muted' : ''
-                      }`}
-                      onClick={() => setSelectedPortfolioId(portfolio.portfolioId || null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{portfolio.portfolioName}</p>
-                          <Badge variant="secondary" className="mt-1">
-                            {portfolio.baseCurrency}
-                          </Badge>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditPortfolio(portfolio)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => {
-                                setSelectedPortfolioId(portfolio.portfolioId || null)
-                                setDeletePortfolioOpen(true)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {portfolios.length === 0 ? (
+        <Card>
+          <CardContent className="py-16">
+            <EmptyState
+              title="No Portfolios Yet"
+              description="Create your first portfolio to start tracking your investments."
+              icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
+              action={{
+                label: 'Create Portfolio',
+                onClick: handleCreatePortfolio,
+              }}
+            />
+          </CardContent>
+        </Card>
+      ) : selectedPortfolioId ? (
+        <>
+          {/* Two-column layout: Commentary (left) + Holdings & Analytics (right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Left Column: AI Commentary */}
+            <div className="lg:col-span-2">
+              <PortfolioCommentary portfolioId={selectedPortfolioId} />
+            </div>
 
-        {/* Portfolio Detail */}
-        <div className="lg:col-span-3 space-y-6">
-          {!selectedPortfolioId ? (
-            <Card>
-              <CardContent className="py-16">
-                <EmptyState
-                  title="Select a Portfolio"
-                  description="Choose a portfolio from the list to view its holdings and analytics."
-                  icon={<Briefcase className="h-12 w-12 text-muted-foreground" />}
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <>
+            {/* Right Column: Portfolio Detail */}
+            <div className="lg:col-span-3 space-y-6">
               {/* Portfolio Header */}
               <Card>
                 <CardHeader>
@@ -313,10 +312,10 @@ export function PortfoliosPage() {
                 holdings={holdings}
                 baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
               />
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      ) : null}
 
       {/* Dialogs */}
       <PortfolioDialog

@@ -11,6 +11,7 @@ import type {
   PagePortfolioDto,
   HoldingDto,
   PageHoldingDto,
+  PortfolioCommentaryResponse,
 } from './types'
 
 // ============ User Endpoints ============
@@ -60,6 +61,12 @@ export const portfolioApi = {
     apiPut<PortfolioDto>(`/api/portfolios/${portfolioId}`, data),
   
   delete: (portfolioId: string) => apiDelete(`/api/portfolios/${portfolioId}`),
+}
+
+// ============ Commentary Endpoints ============
+export const commentaryApi = {
+  get: (portfolioId: string) =>
+    apiGet<PortfolioCommentaryResponse>(`/api/portfolios/${portfolioId}/commentary`),
 }
 
 // ============ Holding Endpoints ============

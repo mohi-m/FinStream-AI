@@ -160,6 +160,24 @@ export interface SortObject {
   ignoreCase?: boolean
 }
 
+// ============ Commentary Types ============
+export interface TickerCommentaryDto {
+  tickerId: string
+  companyName: string
+  sector: string
+  commentary: string
+  filingYear?: number
+  chunksUsed: number
+}
+
+export interface PortfolioCommentaryResponse {
+  portfolioId: string
+  portfolioName: string
+  portfolioOverview: string
+  commentaries: TickerCommentaryDto[]
+  generatedAt: string
+}
+
 // ============ Error Types ============
 export interface ErrorResponse {
   status: number

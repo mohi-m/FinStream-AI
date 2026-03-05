@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { portfolioApi, holdingApi } from '@/lib/api'
+import { portfolioApi, holdingApi, commentaryApi } from '@/lib/api'
 import type { PortfolioDto, HoldingDto } from '@/lib/api'
 import { toast } from 'sonner'
 
@@ -7,6 +7,15 @@ export function usePortfolios(page = 0, size = 20) {
   return useQuery({
     queryKey: ['portfolios', page, size],
     queryFn: () => portfolioApi.getAll({ page, size }),
+  })
+}
+
+export function useCommentary(portfolioId: string) {
+  return useQuery({
+    queryKey: ['commentary', portfolioId],
+    queryFn: () => commentaryApi.get(portfolioId),
+    enabled: !!portfolioId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 

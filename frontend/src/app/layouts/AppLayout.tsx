@@ -163,7 +163,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r">
+      <aside className="hidden lg:flex lg:w-48 lg:flex-col lg:border-r">
         <Sidebar />
       </aside>
 
