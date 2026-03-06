@@ -30,17 +30,17 @@ const navItems = [
 
 function TopNav({ className }: { className?: string }) {
   return (
-    <nav className={cn('flex items-center justify-center gap-6 lg:gap-10', className)}>
+    <nav className={cn('flex items-center justify-center gap-2 lg:gap-4', className)}>
       {navItems.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
           className={({ isActive }) =>
             cn(
-              'inline-flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium transition-colors',
+              'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               isActive
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'bg-foreground text-background shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             )
           }
         >

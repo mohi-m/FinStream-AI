@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   Button,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   Skeleton,
@@ -13,6 +12,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -28,7 +31,7 @@ import {
   PortfolioAnalytics,
   PortfolioCommentary,
 } from './components'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { Plus, Edit, Trash2, Briefcase, MoreHorizontal } from 'lucide-react'
 import {
   DropdownMenu,
@@ -48,22 +51,18 @@ export function PortfoliosPage() {
   const [deleteHoldingOpen, setDeleteHoldingOpen] = useState(false)
   const [deletingHolding, setDeletingHolding] = useState<HoldingDto | null>(null)
 
+  const pageContainerClass = 'mx-auto w-full max-w-screen-2xl px-2 sm:px-3 lg:px-4'
+
   const {
     data: portfoliosData,
     isLoading: portfoliosLoading,
     error: portfoliosError,
   } = usePortfolios()
   const portfolios = portfoliosData?.content || []
-  const selectedPortfolio = portfolios.find((p) => p.portfolioId === selectedPortfolioId)
+  const activePortfolioId = selectedPortfolioId || portfolios[0]?.portfolioId || null
+  const selectedPortfolio = portfolios.find((p) => p.portfolioId === activePortfolioId)
 
-  // Auto-select the first portfolio when portfolios load
-  useEffect(() => {
-    if (portfolios.length > 0 && !selectedPortfolioId) {
-      setSelectedPortfolioId(portfolios[0].portfolioId || null)
-    }
-  }, [portfolios, selectedPortfolioId])
-
-  const { data: holdingsData, isLoading: holdingsLoading } = useHoldings(selectedPortfolioId || '')
+  const { data: holdingsData, isLoading: holdingsLoading } = useHoldings(activePortfolioId || '')
   const holdings = holdingsData?.content || []
 
   const deletePortfolioMutation = useDeletePortfolio()
@@ -80,8 +79,8 @@ export function PortfoliosPage() {
   }
 
   const handleDeletePortfolio = () => {
-    if (selectedPortfolioId) {
-      deletePortfolioMutation.mutate(selectedPortfolioId, {
+    if (activePortfolioId) {
+      deletePortfolioMutation.mutate(activePortfolioId, {
         onSuccess: () => {
           setSelectedPortfolioId(null)
           setDeletePortfolioOpen(false)
@@ -101,9 +100,9 @@ export function PortfoliosPage() {
   }
 
   const handleDeleteHolding = () => {
-    if (selectedPortfolioId && deletingHolding?.tickerId) {
+    if (activePortfolioId && deletingHolding?.tickerId) {
       deleteHoldingMutation.mutate(
-        { portfolioId: selectedPortfolioId, tickerId: deletingHolding.tickerId },
+        { portfolioId: activePortfolioId, tickerId: deletingHolding.tickerId },
         {
           onSuccess: () => {
             setDeletingHolding(null)
@@ -116,18 +115,24 @@ export function PortfoliosPage() {
 
   if (portfoliosLoading) {
     return (
-      <div className="flex items-center justify-center h-[50vh]">
-        <Loading message="Loading portfolios..." />
+      <div className={pageContainerClass}>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loading message="Loading portfolios..." />
+        </div>
       </div>
     )
   }
 
   if (portfoliosError) {
-    return <ErrorState message="Failed to load portfolios" />
+    return (
+      <div className={pageContainerClass}>
+        <ErrorState message="Failed to load portfolios" />
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`${pageContainerClass} space-y-6`}>
       {/* Header with Portfolio Dropdown */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -135,7 +140,7 @@ export function PortfoliosPage() {
           {portfolios.length > 0 && (
             <div className="flex items-center gap-2">
               <Select
-                value={selectedPortfolioId || ''}
+                value={activePortfolioId || ''}
                 onValueChange={(value) => setSelectedPortfolioId(value)}
               >
                 <SelectTrigger className="w-55">
@@ -194,124 +199,122 @@ export function PortfoliosPage() {
             />
           </CardContent>
         </Card>
-      ) : selectedPortfolioId ? (
+      ) : activePortfolioId ? (
         <>
           {/* Two-column layout: Commentary (left) + Holdings & Analytics (right) */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Left Column: AI Commentary */}
             <div className="lg:col-span-2">
-              <PortfolioCommentary portfolioId={selectedPortfolioId} />
+              <PortfolioCommentary portfolioId={activePortfolioId} />
             </div>
 
             {/* Right Column: Portfolio Detail */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Portfolio Header */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{selectedPortfolio?.portfolioName}</CardTitle>
-                      <CardDescription>
-                        Created{' '}
-                        {selectedPortfolio?.createdAt
-                          ? formatDate(selectedPortfolio.createdAt)
-                          : 'N/A'}
-                      </CardDescription>
-                    </div>
-                    <Button onClick={handleCreateHolding}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Holding
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
+            <div className="lg:col-span-3">
+              <Tabs defaultValue="holdings" className="space-y-6">
+                <TabsList className="w-full">
+                  <TabsTrigger value="holdings" className="flex-1">
+                    Holdings
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex-1">
+                    Analytics
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Holdings Table */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Holdings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {holdingsLoading ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-12 w-full" />
-                      ))}
-                    </div>
-                  ) : holdings.length === 0 ? (
-                    <EmptyState
-                      title="No Holdings"
-                      description="Add your first stock holding to start tracking your portfolio."
-                      action={{
-                        label: 'Add Holding',
-                        onClick: handleCreateHolding,
-                      }}
-                    />
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Ticker</TableHead>
-                          <TableHead className="text-right">Quantity</TableHead>
-                          <TableHead className="text-right">Cash Balance</TableHead>
-                          <TableHead>Notes</TableHead>
-                          <TableHead className="w-20"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {holdings.map((holding) => (
-                          <TableRow key={holding.tickerId}>
-                            <TableCell className="font-medium">{holding.tickerId}</TableCell>
-                            <TableCell className="text-right">{holding.quantity}</TableCell>
-                            <TableCell className="text-right">
-                              {holding.cashBalance
-                                ? formatCurrency(
-                                    holding.cashBalance,
-                                    selectedPortfolio?.baseCurrency
-                                  )
-                                : '-'}
-                            </TableCell>
-                            <TableCell className="max-w-50 truncate">
-                              {holding.notes || '-'}
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditHolding(holding)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={() => {
-                                      setDeletingHolding(holding)
-                                      setDeleteHoldingOpen(true)
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Remove
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
+                <TabsContent value="holdings" className="mt-0">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between gap-4">
+                        <CardTitle className="text-lg">Holdings</CardTitle>
+                        <Button onClick={handleCreateHolding}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Holding
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {holdingsLoading ? (
+                        <div className="space-y-2">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-12 w-full" />
+                          ))}
+                        </div>
+                      ) : holdings.length === 0 ? (
+                        <EmptyState
+                          title="No Holdings"
+                          description="Add your first stock holding to start tracking your portfolio."
+                          action={{
+                            label: 'Add Holding',
+                            onClick: handleCreateHolding,
+                          }}
+                        />
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Ticker</TableHead>
+                              <TableHead className="text-right">Quantity</TableHead>
+                              <TableHead className="text-right">Cash Balance</TableHead>
+                              <TableHead>Notes</TableHead>
+                              <TableHead className="w-20"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {holdings.map((holding) => (
+                              <TableRow key={holding.tickerId}>
+                                <TableCell className="font-medium">{holding.tickerId}</TableCell>
+                                <TableCell className="text-right">{holding.quantity}</TableCell>
+                                <TableCell className="text-right">
+                                  {holding.cashBalance
+                                    ? formatCurrency(
+                                        holding.cashBalance,
+                                        selectedPortfolio?.baseCurrency
+                                      )
+                                    : '-'}
+                                </TableCell>
+                                <TableCell className="max-w-50 truncate">
+                                  {holding.notes || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => handleEditHolding(holding)}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() => {
+                                          setDeletingHolding(holding)
+                                          setDeleteHoldingOpen(true)
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Remove
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Portfolio Analytics */}
-              <PortfolioAnalytics
-                holdings={holdings}
-                baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
-              />
+                <TabsContent value="analytics" className="mt-0">
+                  <PortfolioAnalytics
+                    holdings={holdings}
+                    baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </>
@@ -324,11 +327,11 @@ export function PortfoliosPage() {
         portfolio={editingPortfolio}
       />
 
-      {selectedPortfolioId && (
+      {activePortfolioId && (
         <HoldingDialog
           open={holdingDialogOpen}
           onOpenChange={setHoldingDialogOpen}
-          portfolioId={selectedPortfolioId}
+          portfolioId={activePortfolioId}
           holding={editingHolding}
         />
       )}
