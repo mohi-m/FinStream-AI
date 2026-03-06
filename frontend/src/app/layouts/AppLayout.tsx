@@ -1,68 +1,71 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TrendingUp, Briefcase, User, Menu, Moon, Sun, LogOut, Search } from 'lucide-react'
+import { TrendingUp, Briefcase, User, LogOut, Search } from 'lucide-react'
 import {
   Button,
   Avatar,
   AvatarFallback,
   AvatarImage,
+  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
   Input,
+  Skeleton,
 } from '@/components/ui'
-import { useAuth, useTheme } from '@/app/providers'
+import { useAuth } from '@/app/providers'
+import { useTickersSearch } from '@/features/stocks/hooks'
+import { useDebounce } from '@/lib/utils/hooks'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { to: '/app/stocks', icon: TrendingUp, label: 'Stocks' },
+  { to: '/app/overview', icon: TrendingUp, label: 'Overview' },
   { to: '/app/portfolios', icon: Briefcase, label: 'Portfolio' },
   { to: '/app/profile', icon: User, label: 'Profile' },
 ]
 
-function Sidebar({ className }: { className?: string }) {
+function TopNav({ className }: { className?: string }) {
   return (
-    <div className={cn('flex flex-col h-full', className)}>
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary">FinStream</h1>
-      </div>
-      <nav className="flex-1 px-4 space-y-2">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-              )
-            }
-          >
-            <item.icon className="h-5 w-5" />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-    </div>
+    <nav className={cn('flex items-center justify-center gap-6 lg:gap-10', className)}>
+      {navItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) =>
+            cn(
+              'inline-flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium transition-colors',
+              isActive
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )
+          }
+        >
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </NavLink>
+      ))}
+    </nav>
   )
 }
 
 function Header() {
   const { user, signOut } = useAuth()
-  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const desktopSearchContainerRef = useRef<HTMLDivElement | null>(null)
+  const mobileSearchContainerRef = useRef<HTMLDivElement | null>(null)
+  const debouncedQuery = useDebounce(searchQuery.trim(), 300)
+  const {
+    data: searchResults,
+    isLoading: isSearchLoading,
+    isFetching: isSearchFetching,
+  } = useTickersSearch(debouncedQuery, 0, 10)
+  const hasSearchQuery = searchQuery.trim().length > 0
 
   const handleSignOut = async () => {
     await signOut()
@@ -79,47 +82,133 @@ function Header() {
       .slice(0, 2)
   }
 
-  return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-4">
-          {/* Mobile menu */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
-              <SheetHeader className="sr-only">
-                <SheetTitle>Navigation</SheetTitle>
-              </SheetHeader>
-              <Sidebar />
-            </SheetContent>
-          </Sheet>
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node
+      const isInsideDesktopSearch = desktopSearchContainerRef.current?.contains(target)
+      const isInsideMobileSearch = mobileSearchContainerRef.current?.contains(target)
 
-          {/* Search */}
-          <div className="hidden md:flex items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search tickers..."
-                className="w-64 pl-10"
-                onFocus={() => navigate('/app/stocks')}
-              />
-            </div>
+      if (!isInsideDesktopSearch && !isInsideMobileSearch) {
+        setIsSearchOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [])
+
+  const navigateToTicker = (tickerId: string) => {
+    const normalizedTicker = tickerId.trim().toUpperCase()
+    if (!normalizedTicker) return
+
+    setSearchQuery(normalizedTicker)
+    setIsSearchOpen(false)
+    navigate(`/app/overview?ticker=${encodeURIComponent(normalizedTicker)}`)
+  }
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const firstMatchTicker = searchResults?.content?.[0]?.tickerId
+    if (firstMatchTicker) {
+      navigateToTicker(firstMatchTicker)
+      return
+    }
+
+    const normalizedTicker = searchQuery.trim().toUpperCase()
+    if (!normalizedTicker) {
+      setIsSearchOpen(false)
+      return
+    }
+
+    navigateToTicker(normalizedTicker)
+  }
+
+  const renderSearchResults = (className: string) => {
+    if (!isSearchOpen || !hasSearchQuery) return null
+
+    return (
+      <div
+        className={cn(
+          'absolute top-[calc(100%+0.5rem)] z-50 rounded-md border border-border bg-background p-2 shadow-lg',
+          className
+        )}
+      >
+        {isSearchLoading || isSearchFetching ? (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, index) => (
+              <Skeleton key={index} className="h-12 w-full" />
+            ))}
           </div>
+        ) : searchResults?.content && searchResults.content.length > 0 ? (
+          <div className="max-h-80 overflow-y-auto">
+            {searchResults.content.map((ticker, index) => (
+              <button
+                type="button"
+                key={ticker.tickerId || `${ticker.companyName}-${index}`}
+                className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left hover:bg-muted"
+                onClick={() => ticker.tickerId && navigateToTicker(ticker.tickerId)}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{ticker.tickerId}</p>
+                  <p className="truncate text-xs text-muted-foreground">{ticker.companyName}</p>
+                </div>
+                <Badge variant="secondary" className="shrink-0">
+                  {ticker.sector || 'N/A'}
+                </Badge>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="py-3 text-center text-sm text-muted-foreground">
+            No tickers found for "{debouncedQuery}"
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
+      <div className="grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 lg:px-6">
+        <div className="flex items-center gap-3">
+          <NavLink
+            to="/app/overview"
+            className="text-lg font-semibold tracking-tight text-foreground"
+          >
+            FinStream
+          </NavLink>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
+        <TopNav className="hidden md:flex" />
+
+        <div className="flex items-center justify-end gap-1 sm:gap-2">
+          <div className="hidden lg:flex items-center">
+            <div ref={desktopSearchContainerRef} className="relative w-md">
+              <form onSubmit={handleSearchSubmit}>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ticker or company..."
+                  className="h-9 w-full rounded-full border-border/60 bg-muted/30 pl-10 focus-visible:ring-primary/30"
+                  value={searchQuery}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setIsSearchOpen(true)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape') {
+                      setIsSearchOpen(false)
+                    }
+                  }}
+                />
+              </form>
+
+              {renderSearchResults('right-0 w-full')}
+            </div>
+          </div>
 
           {/* User menu */}
           <DropdownMenu>
@@ -155,30 +244,51 @@ function Header() {
           </DropdownMenu>
         </div>
       </div>
+
+      <div className="border-t border-border/60 px-3 py-2 lg:hidden">
+        <div ref={mobileSearchContainerRef} className="relative w-full">
+          <form onSubmit={handleSearchSubmit}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by ticker or company..."
+              className="h-9 w-full rounded-full border-border/60 bg-muted/30 pl-10 focus-visible:ring-primary/30"
+              value={searchQuery}
+              onFocus={() => setIsSearchOpen(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setIsSearchOpen(true)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  setIsSearchOpen(false)
+                }
+              }}
+            />
+          </form>
+
+          {renderSearchResults('left-0 right-0')}
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 px-3 py-2 md:hidden">
+        <TopNav className="w-full justify-start overflow-x-auto" />
+      </div>
     </header>
   )
 }
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:w-48 lg:flex-col lg:border-r">
-        <Sidebar />
-      </aside>
-
-      {/* Main content */}
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <motion.main
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex-1 p-4 lg:p-6"
-        >
-          <Outlet />
-        </motion.main>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <motion.main
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex-1 p-4 lg:p-6"
+      >
+        <Outlet />
+      </motion.main>
     </div>
   )
 }

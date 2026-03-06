@@ -19,7 +19,6 @@ import {
   useLatestFinancial,
   useFinancialHistory,
 } from '../hooks'
-import { useWatchlist } from '../hooks/useWatchlist'
 import { formatCurrency, formatCompactNumber, getDateRange, formatDate } from '@/lib/utils'
 import { Star, StarOff, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react'
 import {
@@ -38,17 +37,29 @@ import { toast } from 'sonner'
 interface TickerDetailProps {
   tickerId: string
   onBack: () => void
+  watchlist: string[]
+  addToWatchlist: (tickerId: string) => boolean
+  removeFromWatchlist: (tickerId: string) => void
+  isInWatchlist: (tickerId: string) => boolean
+  maxSize: number
 }
 
 type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'MAX'
 
-export function TickerDetail({ tickerId, onBack }: TickerDetailProps) {
+export function TickerDetail({
+  tickerId,
+  onBack,
+  watchlist,
+  addToWatchlist,
+  removeFromWatchlist,
+  isInWatchlist,
+  maxSize,
+}: TickerDetailProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('3M')
   const [reportType, setReportType] = useState<'annual' | 'quarterly'>('annual')
 
   const { data: ticker, isLoading: tickerLoading } = useTicker(tickerId)
   const { data: latestPrice, isLoading: priceLoading } = useLatestPrice(tickerId)
-  const { watchlist, addToWatchlist, removeFromWatchlist, isInWatchlist, maxSize } = useWatchlist()
 
   const dateRange = useMemo(() => getDateRange(timeRange), [timeRange])
   const { data: priceHistory, isLoading: historyLoading } = usePriceHistory(tickerId, {

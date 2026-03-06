@@ -73,7 +73,7 @@ export function LandingPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/app/stocks')
+      navigate('/app/overview')
     }
   }, [user, loading, navigate])
 

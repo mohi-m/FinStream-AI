@@ -11,6 +11,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tickers")
 @RequiredArgsConstructor
@@ -23,6 +25,18 @@ public class TickerController {
             @ParameterObject @PageableDefault(size = 20, sort = "tickerId", direction = Sort.Direction.ASC) Pageable pageable) {
         Page<TickerDto> tickers = dimTickerService.searchTickers(query, pageable);
         return ResponseEntity.ok(tickers);
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<List<TickerDto>> getTopTickers(
+            @RequestParam(defaultValue = "5") Integer limit,
+            @RequestParam(required = false) String sector) {
+        return ResponseEntity.ok(dimTickerService.getTopTickersByVolume(limit, sector));
+    }
+
+    @GetMapping("/sectors")
+    public ResponseEntity<List<String>> getSectors() {
+        return ResponseEntity.ok(dimTickerService.getSectors());
     }
 
     @GetMapping("/{tickerId}")

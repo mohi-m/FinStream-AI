@@ -27,6 +27,11 @@ export const tickerApi = {
     apiGet<PageTickerDto>('/api/tickers', params),
   
   getById: (tickerId: string) => apiGet<TickerDto>(`/api/tickers/${tickerId}`),
+
+  getTop: (params?: { limit?: number; sector?: string }) =>
+    apiGet<TickerDto[]>('/api/tickers/top', params),
+
+  getSectors: () => apiGet<string[]>('/api/tickers/sectors'),
 }
 
 // ============ Price Endpoints ============

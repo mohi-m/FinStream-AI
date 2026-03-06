@@ -30,7 +30,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       await signInWithGoogle()
       toast.success('Welcome to FinStream!')
       onOpenChange(false)
-      navigate('/app/stocks')
+      navigate('/app/overview')
     } catch (error) {
       console.error('Google sign in error:', error)
       toast.error('Failed to sign in with Google')
@@ -45,7 +45,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       await signInWithGitHub()
       toast.success('Welcome to FinStream!')
       onOpenChange(false)
-      navigate('/app/stocks')
+      navigate('/app/overview')
     } catch (error) {
       console.error('GitHub sign in error:', error)
       toast.error('Failed to sign in with GitHub')

@@ -1,6 +1,23 @@
 import { useQuery } from '@tanstack/react-query'
 import { tickerApi, priceApi, financialApi } from '@/lib/api'
 
+export function useSectors() {
+  return useQuery({
+    queryKey: ['tickers', 'sectors'],
+    queryFn: () => tickerApi.getSectors(),
+    staleTime: 1000 * 60 * 60, // 1 hour
+  })
+}
+
+export function useTopTickers(params?: { limit?: number; sector?: string }) {
+  return useQuery({
+    queryKey: ['tickers', 'top', params],
+    queryFn: () => tickerApi.getTop(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: 'always',
+  })
+}
+
 export function useTickersSearch(query: string, page = 0, size = 20) {
   return useQuery({
     queryKey: ['tickers', 'search', query, page, size],

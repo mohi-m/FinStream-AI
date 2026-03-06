@@ -43,6 +43,20 @@ public class DimTickerService {
         return mapToDto(ticker);
     }
 
+    public List<String> getSectors() {
+        log.debug("Fetching distinct sectors");
+        return dimTickerRepository.findDistinctSectors();
+    }
+
+    public List<TickerDto> getTopTickersByVolume(Integer limit, String sector) {
+        int effectiveLimit = limit == null ? 5 : Math.max(1, Math.min(limit, 50));
+        String effectiveSector = sector != null && !sector.isBlank() ? sector.trim() : null;
+
+        log.debug("Fetching top tickers by latest volume (limit={}, sector={})", effectiveLimit, effectiveSector);
+        List<DimTicker> tickers = dimTickerRepository.findTopTickersByLatestVolume(effectiveSector, effectiveLimit);
+        return tickers.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
     private TickerDto mapToDto(DimTicker entity) {
         TickerDto dto = new TickerDto();
         dto.setTickerId(entity.getTickerId());

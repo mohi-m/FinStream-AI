@@ -1,8 +1,9 @@
+import type { KeyboardEventHandler } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/ui'
 import { useLatestPrice, usePriceHistory } from '../hooks'
 import { formatCurrency } from '@/lib/utils'
 import { TrendingUp, TrendingDown } from 'lucide-react'
-import { LineChart, Line, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
 
 interface TickerCardProps {
   tickerId: string
@@ -27,14 +28,21 @@ export function TickerCard({ tickerId, companyName, onClick }: TickerCardProps) 
     chartData.length > 1 &&
     (chartData[chartData.length - 1]?.close || 0) >= (chartData[0]?.close || 0)
 
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    if (!onClick) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onClick()
+  }
+
   if (priceLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-20" />
-          <Skeleton className="h-4 w-32" />
+      <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-md ring-1 ring-primary/10">
+        <CardHeader className="relative p-4 pb-2">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-4 w-28" />
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative p-4 pt-0">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-16 w-full mt-4" />
         </CardContent>
@@ -43,10 +51,16 @@ export function TickerCard({ tickerId, companyName, onClick }: TickerCardProps) 
   }
 
   return (
-    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={onClick}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{tickerId}</CardTitle>
+    <Card
+      className="group relative cursor-pointer overflow-hidden border-border/60 bg-card/80 shadow-md ring-1 ring-primary/10 transition-all hover:shadow-lg hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={handleKeyDown}
+    >
+      <CardHeader className="relative p-4 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base">{tickerId}</CardTitle>
           {isPositive ? (
             <TrendingUp className="h-4 w-4 text-green-500" />
           ) : (
@@ -55,22 +69,25 @@ export function TickerCard({ tickerId, companyName, onClick }: TickerCardProps) 
         </div>
         <p className="text-sm text-muted-foreground line-clamp-1">{companyName}</p>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="relative p-4 pt-0">
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold">
+          <span className="text-2xl font-semibold tabular-nums">
             {price?.close ? formatCurrency(price.close) : '--'}
           </span>
         </div>
+
         <div className="h-16 mt-4">
           {historyLoading ? (
             <Skeleton className="h-full w-full" />
           ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
+                <YAxis hide domain={['dataMin', 'dataMax']} />
                 <Line
                   type="monotone"
                   dataKey="close"
-                  stroke={isPositive ? '#22c55e' : '#ef4444'}
+                  stroke={isPositive ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))'}
                   strokeWidth={2}
                   dot={false}
                 />
