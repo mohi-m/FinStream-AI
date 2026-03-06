@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { to: '/app/overview', icon: TrendingUp, label: 'Overview' },
-  { to: '/app/portfolios', icon: Briefcase, label: 'Portfolio' },
+  { to: '/app/portfolios', icon: Briefcase, label: 'My Portfolio' },
   { to: '/app/profile', icon: User, label: 'Profile' },
 ]
 

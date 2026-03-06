@@ -28,10 +28,10 @@ import {
   PortfolioDialog,
   HoldingDialog,
   DeleteConfirmDialog,
-  PortfolioAnalytics,
   PortfolioCommentary,
 } from './components'
-import { formatCurrency } from '@/lib/utils'
+import { PortfolioAnalytics } from './components/PortfolioAnalytics'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import { Plus, Edit, Trash2, Briefcase, MoreHorizontal } from 'lucide-react'
 import {
   DropdownMenu,
@@ -136,7 +136,7 @@ export function PortfoliosPage() {
       {/* Header with Portfolio Dropdown */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold">Portfolios</h1>
+          <h1 className="text-3xl font-bold">My Portfolio</h1>
           {portfolios.length > 0 && (
             <div className="flex items-center gap-2">
               <Select
@@ -252,9 +252,10 @@ export function PortfoliosPage() {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Ticker</TableHead>
-                              <TableHead className="text-right">Quantity</TableHead>
-                              <TableHead className="text-right">Cash Balance</TableHead>
+                              <TableHead className="text-left">Quantity</TableHead>
+                              <TableHead className="text-left">Invested Amount</TableHead>
                               <TableHead>Notes</TableHead>
+                              <TableHead>Last Invested Date</TableHead>
                               <TableHead className="w-20"></TableHead>
                             </TableRow>
                           </TableHeader>
@@ -262,17 +263,20 @@ export function PortfoliosPage() {
                             {holdings.map((holding) => (
                               <TableRow key={holding.tickerId}>
                                 <TableCell className="font-medium">{holding.tickerId}</TableCell>
-                                <TableCell className="text-right">{holding.quantity}</TableCell>
-                                <TableCell className="text-right">
-                                  {holding.cashBalance
+                                <TableCell className="text-left">{holding.quantity}</TableCell>
+                                <TableCell className="text-left">
+                                  {typeof holding.investedAmount === 'number'
                                     ? formatCurrency(
-                                        holding.cashBalance,
+                                        holding.investedAmount,
                                         selectedPortfolio?.baseCurrency
                                       )
                                     : '-'}
                                 </TableCell>
                                 <TableCell className="max-w-50 truncate">
                                   {holding.notes || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  {holding.updatedAt ? formatDate(holding.updatedAt) : '-'}
                                 </TableCell>
                                 <TableCell>
                                   <DropdownMenu>
@@ -283,7 +287,7 @@ export function PortfoliosPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                       <DropdownMenuItem onClick={() => handleEditHolding(holding)}>
-                                        <Edit className="h-4 w-4 mr-2" />
+                                        <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
@@ -293,7 +297,7 @@ export function PortfoliosPage() {
                                           setDeleteHoldingOpen(true)
                                         }}
                                       >
-                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Remove
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>

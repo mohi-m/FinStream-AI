@@ -4,30 +4,42 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useTickersSearch } from '../hooks'
 import { Search } from 'lucide-react'
 import { useDebounce } from '@/lib/utils/hooks'
+import { cn } from '@/lib/utils'
 import type { TickerDto } from '@/lib/api'
 
 interface TickerSearchProps {
   onSelect: (ticker: TickerDto) => void
+  embedded?: boolean
+  inputId?: string
+  className?: string
 }
 
-export function TickerSearch({ onSelect }: TickerSearchProps) {
+export function TickerSearch({
+  onSelect,
+  embedded = false,
+  inputId,
+  className,
+}: TickerSearchProps) {
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebounce(query, 300)
 
   const { data, isLoading, isFetching } = useTickersSearch(debouncedQuery, 0, 10)
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5" />
-          Search Tickers
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+  const searchBody = (
+    <>
+      {!embedded && (
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Search Tickers
+          </CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={cn(embedded && 'p-0')}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            id={inputId}
             placeholder="Search by ticker or company name..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -78,6 +90,12 @@ export function TickerSearch({ onSelect }: TickerSearchProps) {
           </div>
         )}
       </CardContent>
-    </Card>
+    </>
   )
+
+  if (embedded) {
+    return <div className={className}>{searchBody}</div>
+  }
+
+  return <Card className={className}>{searchBody}</Card>
 }

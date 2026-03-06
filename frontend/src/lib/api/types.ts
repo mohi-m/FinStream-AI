@@ -116,7 +116,7 @@ export interface HoldingDto {
   portfolioId?: string
   tickerId: string
   quantity: number
-  cashBalance?: number
+  investedAmount?: number
   notes?: string
   createdAt?: string
   updatedAt?: string

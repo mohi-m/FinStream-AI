@@ -3,10 +3,7 @@ package com.finstream.api.service;
 import com.finstream.api.dto.HoldingDto;
 import com.finstream.api.entity.PortfolioHolding;
 import com.finstream.api.entity.PortfolioHolding.PortfolioHoldingId;
-import com.finstream.api.entity.UserPortfolio;
-import com.finstream.api.exception.DuplicateResourceException;
 import com.finstream.api.exception.ResourceNotFoundException;
-import com.finstream.api.exception.UnauthorizedAccessException;
 import com.finstream.api.repository.PortfolioHoldingRepository;
 import com.finstream.api.repository.UserPortfolioRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,16 +55,28 @@ public class PortfolioHoldingService {
                 });
 
         PortfolioHoldingId id = new PortfolioHoldingId(portfolioId, dto.getTickerId());
-        if (holdingRepository.existsById(id)) {
-            log.warn("Holding for ticker {} already exists in portfolio {}", dto.getTickerId(), portfolioId);
-            throw new DuplicateResourceException("Holding already exists for this ticker in this portfolio");
+        PortfolioHolding existingHolding = holdingRepository.findById(id).orElse(null);
+        if (existingHolding != null) {
+            existingHolding.setQuantity(valueOrZero(existingHolding.getQuantity()).add(valueOrZero(dto.getQuantity())));
+            existingHolding
+                    .setInvestedAmount(
+                            valueOrZero(existingHolding.getInvestedAmount()).add(valueOrZero(dto.getInvestedAmount())));
+            if (hasText(dto.getNotes())) {
+                existingHolding.setNotes(dto.getNotes().trim());
+            }
+
+            PortfolioHolding merged = holdingRepository.save(existingHolding);
+            log.info("Holding for ticker {} already exists in portfolio {}. Merged additional investment.",
+                    dto.getTickerId(),
+                    portfolioId);
+            return mapToDto(merged);
         }
 
         PortfolioHolding holding = new PortfolioHolding();
         holding.setId(id);
         holding.setQuantity(dto.getQuantity());
         holding.setInvestedAmount(dto.getInvestedAmount() != null ? dto.getInvestedAmount() : BigDecimal.ZERO);
-        holding.setNotes(dto.getNotes());
+        holding.setNotes(hasText(dto.getNotes()) ? dto.getNotes().trim() : null);
 
         PortfolioHolding saved = holdingRepository.save(holding);
         log.info("Holding added successfully for ticker {}", dto.getTickerId());
@@ -132,5 +141,13 @@ public class PortfolioHoldingService {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
+    }
+
+    private BigDecimal valueOrZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }
