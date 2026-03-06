@@ -3,6 +3,7 @@ package com.finstream.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
@@ -17,21 +18,27 @@ import java.util.UUID;
 public class HoldingDto {
     private UUID portfolioId;
 
-    @NotBlank(message = "Ticker ID cannot be blank", groups = {Create.class, Update.class})
+    @NotBlank(message = "Ticker ID cannot be blank", groups = { Create.class, Update.class })
     private String tickerId;
 
-    @NotNull(message = "Quantity cannot be null", groups = {Create.class, Update.class})
-    @DecimalMin(value = "0", inclusive = true, message = "Quantity must be >= 0", groups = {Create.class, Update.class})
+    @NotNull(message = "Quantity cannot be null", groups = { Create.class, Update.class })
+    @DecimalMin(value = "0", inclusive = true, message = "Quantity must be >= 0", groups = { Create.class,
+            Update.class })
     private BigDecimal quantity;
 
-    @DecimalMin(value = "0", inclusive = true, message = "Cash balance must be >= 0", groups = {Create.class, Update.class})
-    private BigDecimal cashBalance;
+    @JsonAlias("cashBalance")
+    @DecimalMin(value = "0", inclusive = true, message = "Invested amount must be >= 0", groups = { Create.class,
+            Update.class })
+    private BigDecimal investedAmount;
 
     private String notes;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public interface Create {}
-    public interface Update {}
+    public interface Create {
+    }
+
+    public interface Update {
+    }
 }

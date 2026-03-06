@@ -97,7 +97,7 @@ CREATE TABLE portfolio_holding (
     portfolio_id uuid NOT NULL,
     ticker_id varchar(10) NOT NULL,
     quantity numeric(20, 6) NOT NULL,
-    cash_balance numeric(20, 6) NOT NULL DEFAULT 0,
+    invested_amount numeric(20, 6) NOT NULL DEFAULT 0,
     notes text,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,

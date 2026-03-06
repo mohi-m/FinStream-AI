@@ -21,8 +21,8 @@ public class PortfolioHolding {
     @Column(name = "quantity", nullable = false, precision = 20, scale = 6)
     private BigDecimal quantity;
 
-    @Column(name = "cash_balance", precision = 20, scale = 6)
-    private BigDecimal cashBalance;
+    @Column(name = "invested_amount", precision = 20, scale = 6)
+    private BigDecimal investedAmount;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
@@ -45,8 +45,8 @@ public class PortfolioHolding {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (cashBalance == null) {
-            cashBalance = BigDecimal.ZERO;
+        if (investedAmount == null) {
+            investedAmount = BigDecimal.ZERO;
         }
     }
 
@@ -68,8 +68,10 @@ public class PortfolioHolding {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             PortfolioHoldingId that = (PortfolioHoldingId) o;
             return Objects.equals(portfolioId, that.portfolioId) &&
                     Objects.equals(tickerId, that.tickerId);

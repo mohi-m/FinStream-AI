@@ -48,7 +48,8 @@ public class PortfolioHoldingService {
     }
 
     public HoldingDto addHolding(UUID portfolioId, String firebaseUid, HoldingDto dto) {
-        log.info("Adding holding for ticker {} to portfolio {} for user {}", dto.getTickerId(), portfolioId, firebaseUid);
+        log.info("Adding holding for ticker {} to portfolio {} for user {}", dto.getTickerId(), portfolioId,
+                firebaseUid);
         // Verify portfolio ownership
         portfolioRepository.findByPortfolioIdAndFirebaseUid(portfolioId, firebaseUid)
                 .orElseThrow(() -> {
@@ -65,7 +66,7 @@ public class PortfolioHoldingService {
         PortfolioHolding holding = new PortfolioHolding();
         holding.setId(id);
         holding.setQuantity(dto.getQuantity());
-        holding.setCashBalance(dto.getCashBalance() != null ? dto.getCashBalance() : BigDecimal.ZERO);
+        holding.setInvestedAmount(dto.getInvestedAmount() != null ? dto.getInvestedAmount() : BigDecimal.ZERO);
         holding.setNotes(dto.getNotes());
 
         PortfolioHolding saved = holdingRepository.save(holding);
@@ -90,8 +91,8 @@ public class PortfolioHoldingService {
                 });
 
         holding.setQuantity(dto.getQuantity());
-        if (dto.getCashBalance() != null) {
-            holding.setCashBalance(dto.getCashBalance());
+        if (dto.getInvestedAmount() != null) {
+            holding.setInvestedAmount(dto.getInvestedAmount());
         }
         if (dto.getNotes() != null) {
             holding.setNotes(dto.getNotes());
@@ -126,7 +127,7 @@ public class PortfolioHoldingService {
         dto.setPortfolioId(entity.getId().getPortfolioId());
         dto.setTickerId(entity.getId().getTickerId());
         dto.setQuantity(entity.getQuantity());
-        dto.setCashBalance(entity.getCashBalance());
+        dto.setInvestedAmount(entity.getInvestedAmount());
         dto.setNotes(entity.getNotes());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
