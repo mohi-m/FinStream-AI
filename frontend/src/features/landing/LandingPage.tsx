@@ -254,7 +254,7 @@ export function LandingPage() {
                 size="lg"
                 onClick={handleTryDemo}
                 disabled={demoLoading}
-                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.99]"
+                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
               >
                 <motion.span
                   aria-hidden
