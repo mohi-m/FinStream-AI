@@ -17,6 +17,7 @@ export interface TickerDto {
   industry?: string
   currency?: string
   lastUpdated?: string
+  weeklyPercentChange?: number
 }
 
 export interface PageTickerDto {

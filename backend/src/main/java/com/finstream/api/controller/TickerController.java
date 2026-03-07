@@ -31,7 +31,7 @@ public class TickerController {
     public ResponseEntity<List<TickerDto>> getTopTickers(
             @RequestParam(defaultValue = "5") Integer limit,
             @RequestParam(required = false) String sector) {
-        return ResponseEntity.ok(dimTickerService.getTopTickersByVolume(limit, sector));
+        return ResponseEntity.ok(dimTickerService.getTopTickersByWeeklyGain(limit, sector));
     }
 
     @GetMapping("/sectors")

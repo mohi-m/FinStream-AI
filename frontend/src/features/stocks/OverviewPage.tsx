@@ -35,7 +35,7 @@ export function OverviewPage() {
     data: topTickersData,
     isLoading: topTickersLoading,
     error: topTickersError,
-  } = useTopTickers({ limit: 5, sector: selectedSector })
+  } = useTopTickers({ limit: 6, sector: selectedSector })
 
   const topTickers = useMemo(
     () => (topTickersData || []).filter((t) => (t.tickerId || '').trim().length > 0),
@@ -76,14 +76,16 @@ export function OverviewPage() {
   }
 
   return (
-    <div className={`${pageContainerClass} space-y-8`}>
+    <div
+      className={`${pageContainerClass} space-y-8 lg:flex lg:h-[calc(100dvh-7.5rem)] lg:flex-col lg:space-y-3`}
+    >
       <div>
         <h1 className="text-3xl font-bold">Overview</h1>
         <p className="text-muted-foreground">Market snapshot and watchlist</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8 lg:flex lg:min-h-0 lg:flex-col lg:space-y-3">
           <div className="space-y-4">
             {INDEX_TICKERS.map((ticker) => (
               <IndexTickerCard
@@ -95,12 +97,12 @@ export function OverviewPage() {
             ))}
           </div>
 
-          <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10">
-            <CardHeader className="relative p-5 pb-3">
+          <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+            <CardHeader className="relative p-5 pb-3 lg:p-4 lg:pb-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <CardTitle className="text-xl">Top stocks</CardTitle>
-                  <CardDescription>Explore today’s market leaders</CardDescription>
+                  <CardDescription>Top performers over the last 7 days</CardDescription>
                 </div>
 
                 <Select value={sector} onValueChange={setSector}>
@@ -119,10 +121,10 @@ export function OverviewPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="relative p-5 pt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <CardContent className="relative p-5 pt-0 lg:min-h-0 lg:flex-1 lg:p-4 lg:pt-0">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:h-full lg:auto-rows-fr lg:gap-3">
                 {topTickersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
+                  Array.from({ length: 6 }).map((_, i) => (
                     <Card
                       key={i}
                       className="relative overflow-hidden border-border/60 bg-card/80 shadow-md ring-1 ring-primary/10"
@@ -151,6 +153,7 @@ export function OverviewPage() {
                       key={ticker.tickerId}
                       tickerId={ticker.tickerId || ''}
                       companyName={ticker.companyName || '—'}
+                      weeklyPercentChange={ticker.weeklyPercentChange}
                       onClick={() => handleSelectTicker(ticker.tickerId || '')}
                     />
                   ))
@@ -160,12 +163,13 @@ export function OverviewPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 lg:min-h-0">
           <WatchlistPanel
             tickerIds={watchlist}
             onSelectTicker={handleSelectTicker}
             onAddTicker={addToWatchlist}
             maxSize={maxSize}
+            className="lg:h-full"
           />
         </div>
       </div>

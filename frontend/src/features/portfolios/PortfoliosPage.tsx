@@ -61,6 +61,7 @@ export function PortfoliosPage() {
   const portfolios = portfoliosData?.content || []
   const activePortfolioId = selectedPortfolioId || portfolios[0]?.portfolioId || null
   const selectedPortfolio = portfolios.find((p) => p.portfolioId === activePortfolioId)
+  const hasActivePortfolio = portfolios.length > 0 && !!activePortfolioId
 
   const { data: holdingsData, isLoading: holdingsLoading } = useHoldings(activePortfolioId || '')
   const holdings = holdingsData?.content || []
@@ -132,7 +133,9 @@ export function PortfoliosPage() {
   }
 
   return (
-    <div className={`${pageContainerClass} space-y-6`}>
+    <div
+      className={`${pageContainerClass} space-y-6 ${hasActivePortfolio ? 'lg:flex lg:h-[calc(100dvh-7.5rem)] lg:flex-col lg:space-y-4' : ''}`}
+    >
       {/* Header with Portfolio Dropdown */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -202,15 +205,18 @@ export function PortfoliosPage() {
       ) : activePortfolioId ? (
         <>
           {/* Two-column layout: Commentary (left) + Holdings & Analytics (right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-5">
             {/* Left Column: AI Commentary */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 lg:min-h-0">
               <PortfolioCommentary portfolioId={activePortfolioId} />
             </div>
 
             {/* Right Column: Portfolio Detail */}
-            <div className="lg:col-span-3">
-              <Tabs defaultValue="holdings" className="space-y-6">
+            <div className="lg:col-span-3 lg:min-h-0">
+              <Tabs
+                defaultValue="holdings"
+                className="space-y-6 lg:flex lg:h-full lg:flex-col lg:space-y-4"
+              >
                 <TabsList className="w-full">
                   <TabsTrigger value="holdings" className="flex-1">
                     Holdings
@@ -220,8 +226,8 @@ export function PortfoliosPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="holdings" className="mt-0">
-                  <Card>
+                <TabsContent value="holdings" className="mt-0 lg:min-h-0 lg:flex-1">
+                  <Card className="lg:flex lg:h-full lg:flex-col">
                     <CardHeader>
                       <div className="flex items-center justify-between gap-4">
                         <CardTitle className="text-lg">Holdings</CardTitle>
@@ -231,7 +237,7 @@ export function PortfoliosPage() {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="lg:min-h-0 lg:flex-1 lg:overflow-auto">
                       {holdingsLoading ? (
                         <div className="space-y-2">
                           {[1, 2, 3].map((i) => (
@@ -312,10 +318,11 @@ export function PortfoliosPage() {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="analytics" className="mt-0">
+                <TabsContent value="analytics" className="mt-0 lg:min-h-0 lg:flex-1">
                   <PortfolioAnalytics
                     holdings={holdings}
                     baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
+                    className="lg:h-full"
                   />
                 </TabsContent>
               </Tabs>

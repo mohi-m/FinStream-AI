@@ -16,4 +16,5 @@ public class TickerDto {
     private String industry;
     private String currency;
     private LocalDateTime lastUpdated;
+    private Double weeklyPercentChange;
 }

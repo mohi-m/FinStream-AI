@@ -9,7 +9,7 @@ import {
   Skeleton,
 } from '@/components/ui'
 import { useLatestPrice, usePriceHistory } from '../hooks'
-import { formatCurrency } from '@/lib/utils'
+import { cn, formatCurrency, formatPercent } from '@/lib/utils'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
 
@@ -22,7 +22,7 @@ interface IndexTickerCardProps {
 export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerCardProps) {
   const { data: price, isLoading: priceLoading } = useLatestPrice(tickerId)
 
-  const trendDays = 7
+  const trendDays = 30
   const trendTo = new Date()
   const trendFrom = new Date(trendTo)
   trendFrom.setDate(trendFrom.getDate() - trendDays)
@@ -32,15 +32,46 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
     size: trendDays,
   })
 
-  const chartData =
+  const historyRows =
     priceHistory?.content
       ?.filter((p) => typeof p.close === 'number')
       ?.slice()
-      ?.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-      ?.map((p) => ({ close: p.close as number })) || []
+      ?.sort((a, b) => (a.date || '').localeCompare(b.date || '')) || []
+
+  const chartData = historyRows.map((p) => ({ close: p.close as number }))
+
+  const latestHistoryDateRaw = historyRows[historyRows.length - 1]?.date
+  const latestHistoryDate = latestHistoryDateRaw ? new Date(`${latestHistoryDateRaw}T00:00:00`) : null
+  const weeklyWindowStart = latestHistoryDate ? new Date(latestHistoryDate) : null
+  weeklyWindowStart?.setDate(weeklyWindowStart.getDate() - 7)
+  weeklyWindowStart?.setHours(0, 0, 0, 0)
+
+  const weeklyBaselineClose =
+    historyRows.find((row) => {
+      if (!latestHistoryDate || !weeklyWindowStart || !row.date || typeof row.close !== 'number') {
+        return false
+      }
+
+      const rowDate = new Date(`${row.date}T00:00:00`)
+      return rowDate >= weeklyWindowStart && rowDate < latestHistoryDate
+    })?.close ?? (historyRows.length > 1 ? historyRows[0]?.close : null)
+
+  const latestClose = historyRows[historyRows.length - 1]?.close
+  const weeklyChangeValue =
+    typeof weeklyBaselineClose === 'number' &&
+    typeof latestClose === 'number' &&
+    weeklyBaselineClose !== 0
+      ? ((latestClose - weeklyBaselineClose) / weeklyBaselineClose) * 100
+      : null
+  const hasWeeklyChange = weeklyChangeValue !== null
+  const weeklyChangePositive = !hasWeeklyChange || weeklyChangeValue >= 0
+  const weeklyChangeText =
+    weeklyChangeValue === null ? '--' : `${weeklyChangeValue > 0 ? '+' : ''}${formatPercent(weeklyChangeValue)}`
+
   const isPositive =
     chartData.length > 1 &&
     (chartData[chartData.length - 1]?.close || 0) >= (chartData[0]?.close || 0)
+  const positiveTrend = hasWeeklyChange ? weeklyChangePositive : isPositive
 
   const displayTicker = tickerId.replace(/\^/g, '')
 
@@ -54,7 +85,7 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
   if (priceLoading) {
     return (
       <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10">
-        <CardHeader className="relative p-5 pb-3">
+        <CardHeader className="relative p-5 pb-3 lg:p-4 lg:pb-2">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <Skeleton className="h-6 w-48" />
@@ -63,13 +94,13 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
             <Skeleton className="h-5 w-12" />
           </div>
         </CardHeader>
-        <CardContent className="relative p-5 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-end">
-            <div className="space-y-2">
+        <CardContent className="relative p-5 pt-0 lg:p-4 lg:pt-0">
+          <div className="space-y-3">
+            <div className="flex items-baseline gap-2">
               <Skeleton className="h-9 w-32" />
               <Skeleton className="h-4 w-24" />
             </div>
-            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-32 w-full lg:h-24" />
           </div>
         </CardContent>
       </Card>
@@ -84,11 +115,11 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={handleKeyDown}
     >
-      <CardHeader className="relative p-5 pb-3">
+      <CardHeader className="relative p-5 pb-3 lg:p-4 lg:pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <CardTitle className="text-xl truncate">{companyName}</CardTitle>
+              <CardTitle className="text-xl truncate lg:text-lg">{companyName}</CardTitle>
               <Badge variant="secondary" className="shrink-0 font-mono">
                 {displayTicker}
               </Badge>
@@ -96,7 +127,7 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
             <CardDescription>Market index snapshot</CardDescription>
           </div>
 
-          {isPositive ? (
+          {positiveTrend ? (
             <TrendingUp className="mt-1 h-4 w-4 text-green-500" />
           ) : (
             <TrendingDown className="mt-1 h-4 w-4 text-red-500" />
@@ -104,16 +135,27 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
         </div>
       </CardHeader>
 
-      <CardContent className="relative p-5 pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-end">
-          <div className="space-y-1">
-            <div className="text-3xl font-semibold tabular-nums">
+      <CardContent className="relative p-5 pt-0 lg:p-4 lg:pt-0">
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-2">
+            <div className="text-3xl font-semibold tabular-nums lg:text-2xl">
               {price?.close ? formatCurrency(price.close) : '--'}
             </div>
-            <div className="text-sm text-muted-foreground">Last 7 days</div>
+            <div
+              className={cn(
+                'text-sm font-medium tabular-nums',
+                !hasWeeklyChange
+                  ? 'text-muted-foreground'
+                  : weeklyChangePositive
+                    ? 'text-green-500'
+                    : 'text-red-500'
+              )}
+            >
+              {weeklyChangeText}
+            </div>
           </div>
 
-          <div className="h-28">
+          <div className="h-32 lg:h-24">
             {historyLoading ? (
               <Skeleton className="h-full w-full" />
             ) : chartData.length > 0 ? (
@@ -126,6 +168,8 @@ export function IndexTickerCard({ tickerId, companyName, onClick }: IndexTickerC
                     stroke={isPositive ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))'}
                     strokeWidth={2}
                     dot={false}
+                    activeDot={false}
+                    connectNulls
                   />
                 </LineChart>
               </ResponsiveContainer>

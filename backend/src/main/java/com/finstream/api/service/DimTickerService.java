@@ -48,12 +48,13 @@ public class DimTickerService {
         return dimTickerRepository.findDistinctSectors();
     }
 
-    public List<TickerDto> getTopTickersByVolume(Integer limit, String sector) {
+    public List<TickerDto> getTopTickersByWeeklyGain(Integer limit, String sector) {
         int effectiveLimit = limit == null ? 5 : Math.max(1, Math.min(limit, 50));
         String effectiveSector = sector != null && !sector.isBlank() ? sector.trim() : null;
 
-        log.debug("Fetching top tickers by latest volume (limit={}, sector={})", effectiveLimit, effectiveSector);
-        List<DimTicker> tickers = dimTickerRepository.findTopTickersByLatestVolume(effectiveSector, effectiveLimit);
+        log.debug("Fetching top tickers by 7-day gain (limit={}, sector={})", effectiveLimit, effectiveSector);
+        List<DimTickerRepository.TopTickerByWeeklyGainProjection> tickers = dimTickerRepository
+                .findTopTickersByWeeklyGain(effectiveSector, effectiveLimit);
         return tickers.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
@@ -65,6 +66,18 @@ public class DimTickerService {
         dto.setIndustry(entity.getIndustry());
         dto.setCurrency(entity.getCurrency());
         dto.setLastUpdated(entity.getLastUpdated());
+        return dto;
+    }
+
+    private TickerDto mapToDto(DimTickerRepository.TopTickerByWeeklyGainProjection projection) {
+        TickerDto dto = new TickerDto();
+        dto.setTickerId(projection.getTickerId());
+        dto.setCompanyName(projection.getCompanyName());
+        dto.setSector(projection.getSector());
+        dto.setIndustry(projection.getIndustry());
+        dto.setCurrency(projection.getCurrency());
+        dto.setLastUpdated(projection.getLastUpdated());
+        dto.setWeeklyPercentChange(projection.getWeeklyPercentChange());
         return dto;
     }
 }

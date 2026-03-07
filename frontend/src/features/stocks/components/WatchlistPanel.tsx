@@ -52,12 +52,12 @@ function WatchlistRow({ tickerId, onSelect }: WatchlistRowProps) {
       type="button"
       onClick={() => onSelect(tickerId)}
       className={cn(
-        'flex w-full items-center justify-between gap-3 px-4 py-3 text-left',
+        'flex w-full items-center justify-between gap-3 px-4 py-2 text-left',
         'transition-colors hover:bg-muted/50',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
       )}
     >
-      <div className="flex items-center my-2 gap-3 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         <Avatar className="h-10 w-10">
           <AvatarFallback className="text-xs font-semibold">
             {tickerId.replace(/\^/g, '').slice(0, 2).toUpperCase()}
@@ -68,7 +68,7 @@ function WatchlistRow({ tickerId, onSelect }: WatchlistRowProps) {
           {tickerLoading ? (
             <Skeleton className="mt-1 h-3 w-28" />
           ) : (
-            <div className="text-xs text-muted-foreground py-1 line-clamp-1">
+            <div className="text-xs text-muted-foreground line-clamp-1">
               {ticker?.companyName || '—'}
             </div>
           )}
@@ -87,10 +87,7 @@ function WatchlistRow({ tickerId, onSelect }: WatchlistRowProps) {
               {typeof close === 'number' ? formatCurrency(close) : '--'}
             </div>
             <div
-              className={cn(
-                'text-xs tabular-nums py-1',
-                isPositive ? 'text-green-500' : 'text-red-500'
-              )}
+              className={cn('text-xs tabular-nums', isPositive ? 'text-green-500' : 'text-red-500')}
             >
               {changeText}
             </div>
@@ -114,7 +111,7 @@ export function WatchlistPanel({
   return (
     <Card
       className={cn(
-        'relative h-fit overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10',
+        'relative h-fit overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10 lg:flex lg:min-h-0 lg:flex-col',
         className
       )}
     >
@@ -159,8 +156,8 @@ export function WatchlistPanel({
           </p>
         </CardContent>
       ) : (
-        <CardContent className="relative p-0">
-          <div className="divide-y divide-border">
+        <CardContent className="relative p-0 lg:min-h-0 lg:flex-1">
+          <div className="divide-y divide-border lg:h-full">
             {tickerIds.map((tickerId) => (
               <WatchlistRow key={tickerId} tickerId={tickerId} onSelect={onSelectTicker} />
             ))}
