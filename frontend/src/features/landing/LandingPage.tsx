@@ -234,12 +234,12 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.45 }}
-              className="relative isolate"
+              className="relative isolate group"
             >
               <motion.span
-                animate={{ y: [0, -5, 0], opacity: [0.78, 1, 0.78] }}
+                animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 z-10 rounded-full border border-primary/35 bg-background/90 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase backdrop-blur-sm whitespace-nowrap"
+                className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 z-10 rounded-full border border-primary/35 bg-background/90 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase backdrop-blur-sm whitespace-nowrap opacity-90 transition-opacity duration-300 ease-out group-hover:opacity-0"
               >
                 No Signup
               </motion.span>
@@ -254,7 +254,7 @@ export function LandingPage() {
                 size="lg"
                 onClick={handleTryDemo}
                 disabled={demoLoading}
-                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden"
+                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.99]"
               >
                 <motion.span
                   aria-hidden
@@ -265,7 +265,7 @@ export function LandingPage() {
                 {demoLoading ? (
                   <LoaderCircle className="relative mr-2 h-5 w-5 animate-spin" />
                 ) : (
-                  <Play className="relative mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                  <Play className="relative mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                 )}
                 <span className="relative">Try Demo</span>
               </Button>
