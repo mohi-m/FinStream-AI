@@ -375,7 +375,7 @@ def extract_10k_payload(
     plain_text = clean_text(BeautifulSoup(html_content, "html.parser").get_text("\n"))
     period_match = PERIOD_RE.search(plain_text) or ALT_PERIOD_RE.search(plain_text)
     period_source = period or (period_match.group(1) if period_match else "")
-    resolved_period = _extract_year(period_source)
+    resolved_period = _extract_year(period_source) or DEFAULT_FILING_YEAR
 
     return {
         "ticker": (ticker or "").upper(),
