@@ -3,6 +3,8 @@ import {
   onAuthChange,
   signInWithGoogle,
   signInWithGitHub,
+  signInWithDemoUser,
+  isDemoUserConfigured,
   signOut as firebaseSignOut,
   type User,
 } from '@/lib/firebase'
@@ -20,10 +22,28 @@ interface AuthContextType {
   loading: boolean
   signInWithGoogle: () => Promise<User>
   signInWithGitHub: () => Promise<User>
+  signInWithDemoUser: () => Promise<User>
+  isDemoUserConfigured: boolean
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+function getAuthMethod(user: User): 'google' | 'github' | 'password' | 'unknown' {
+  const providerId = user.providerData[0]?.providerId
+
+  if (providerId === 'google.com') {
+    return 'google'
+  }
+  if (providerId === 'github.com') {
+    return 'github'
+  }
+  if (providerId === 'password') {
+    return 'password'
+  }
+
+  return 'unknown'
+}
 
 /**
  * Syncs the Firebase user to the backend app_user table.
@@ -55,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // User is logged in
         setUser(user)
         setLastUserUid(user.uid)
+        const authMethod = getAuthMethod(user)
 
         // Sync user to backend when they log in
         await syncUserToBackend(user)
@@ -62,10 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Track login/signup
         if (!previousUid) {
           // This is a new session/fresh login - check if it's a signup by seeing if backend sync happens
-          logSignUp(user.providerData[0]?.providerId.includes('google') ? 'google' : 'github')
+          logSignUp(authMethod)
         } else if (previousUid !== user.uid) {
           // Different user logged in
-          logLogin(user.providerData[0]?.providerId.includes('google') ? 'google' : 'github')
+          logLogin(authMethod)
         }
 
         // Set user properties for analytics segmentation
@@ -105,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signInWithGoogle,
         signInWithGitHub,
+        signInWithDemoUser,
+        isDemoUserConfigured,
         signOut,
       }}
     >

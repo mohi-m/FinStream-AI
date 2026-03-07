@@ -12,10 +12,12 @@ import {
   Sparkles,
   ChevronRight,
   Play,
+  LoaderCircle,
 } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { useAuth } from '@/app/providers'
 import { LoginDialog } from '@/features/auth'
+import { toast } from 'sonner'
 
 const features = [
   {
@@ -67,9 +69,29 @@ const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: numb
 )
 
 export function LandingPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, signInWithDemoUser, isDemoUserConfigured } = useAuth()
   const navigate = useNavigate()
   const [loginOpen, setLoginOpen] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
+
+  const handleTryDemo = async () => {
+    if (!isDemoUserConfigured) {
+      toast.error('Demo mode is currently unavailable. Please use Log In.')
+      return
+    }
+
+    try {
+      setDemoLoading(true)
+      await signInWithDemoUser()
+      toast.success('Signed in as demo user')
+      navigate('/app/overview')
+    } catch (error) {
+      console.error('Demo sign in error:', error)
+      toast.error('Unable to sign in to demo right now')
+    } finally {
+      setDemoLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!loading && user) {
@@ -208,22 +230,46 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-12 flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button
-              size="lg"
-              className="h-14 px-8 text-base bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-xl shadow-primary/30 group"
-              onClick={() => setLoginOpen(true)}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.45 }}
+              className="relative isolate"
             >
-              Get Started
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 text-base border-border/50 hover:bg-muted/50 group"
-            >
-              <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              Watch Demo
-            </Button>
+              <motion.span
+                animate={{ y: [0, -5, 0], opacity: [0.78, 1, 0.78] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 z-10 rounded-full border border-primary/35 bg-background/90 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase backdrop-blur-sm whitespace-nowrap"
+              >
+                No Signup
+              </motion.span>
+
+              <motion.div
+                animate={{ opacity: [0.4, 0.72, 0.4], scale: [1, 1.04, 1] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                className="pointer-events-none absolute -inset-1 rounded-2xl bg-linear-to-r from-primary/60 via-blue-500/45 to-cyan-500/60 blur-md"
+              />
+
+              <Button
+                size="lg"
+                onClick={handleTryDemo}
+                disabled={demoLoading}
+                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden"
+              >
+                <motion.span
+                  aria-hidden
+                  animate={{ x: ['-120%', '140%'] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent"
+                />
+                {demoLoading ? (
+                  <LoaderCircle className="relative mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <Play className="relative mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                )}
+                <span className="relative">Try Demo</span>
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
 

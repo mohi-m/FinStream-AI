@@ -62,13 +62,15 @@ export const logEngagement = (eventName: string, eventParams?: Record<string, an
 /**
  * Track authentication events
  */
-export const logSignUp = (method: 'google' | 'github'): void => {
+export type AuthMethod = 'google' | 'github' | 'password' | 'unknown'
+
+export const logSignUp = (method: AuthMethod): void => {
   logEvent('sign_up', {
     method: method,
   })
 }
 
-export const logLogin = (method: 'google' | 'github'): void => {
+export const logLogin = (method: AuthMethod): void => {
   logEvent('login', {
     method: method,
   })

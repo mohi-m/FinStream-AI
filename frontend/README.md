@@ -6,7 +6,7 @@ A modern financial dashboard built with React, TypeScript, and Vite.
 
 - 📈 **Stock Tracking** - Browse stocks, view price history charts, and manage a personal watchlist
 - 💼 **Portfolio Management** - Create portfolios, add holdings, and track portfolio value
-- 🔐 **Authentication** - Sign in with Google or GitHub via Firebase
+- 🔐 **Authentication** - Sign in with Google, GitHub, or a shared demo account via Firebase
 - 🌓 **Dark/Light Mode** - Toggle between themes with system preference detection
 - 📊 **Analytics** - Visualize portfolio allocation with interactive charts
 
@@ -64,6 +64,15 @@ The app will be available at `http://localhost:5173`
 | `VITE_FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket                            |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID                       |
 | `VITE_FIREBASE_APP_ID`              | Firebase app ID                                    |
+| `VITE_DEMO_USER_EMAIL`              | Optional shared demo account email                 |
+| `VITE_DEMO_USER_PASSWORD`           | Optional shared demo account password              |
+
+## Demo User Setup (Optional)
+
+1. Enable **Email/Password** in Firebase Authentication providers.
+2. Create a demo account in Firebase Auth (example: `demo@your-domain.com`).
+3. Add `VITE_DEMO_USER_EMAIL` and `VITE_DEMO_USER_PASSWORD` to your `.env`.
+4. The landing page will show a **Try Demo** button that signs into the shared demo account.
 
 ## Project Structure
 
