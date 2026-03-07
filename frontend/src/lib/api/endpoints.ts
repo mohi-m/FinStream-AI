@@ -72,6 +72,9 @@ export const portfolioApi = {
 export const commentaryApi = {
   get: (portfolioId: string) =>
     apiGet<PortfolioCommentaryResponse>(`/api/portfolios/${portfolioId}/commentary`),
+
+  refresh: (portfolioId: string) =>
+    apiPost<PortfolioCommentaryResponse>(`/api/portfolios/${portfolioId}/commentary/refresh`),
 }
 
 // ============ Holding Endpoints ============

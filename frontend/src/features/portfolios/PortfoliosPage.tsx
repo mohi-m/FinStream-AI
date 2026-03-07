@@ -29,6 +29,7 @@ import {
   HoldingDialog,
   DeleteConfirmDialog,
   PortfolioCommentary,
+  PortfolioSummaryCards,
 } from './components'
 import { PortfolioAnalytics } from './components/PortfolioAnalytics'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -212,19 +213,34 @@ export function PortfoliosPage() {
             </div>
 
             {/* Right Column: Portfolio Detail */}
-            <div className="lg:col-span-3 lg:min-h-0">
+            <div className="lg:col-span-3 lg:flex lg:min-h-0 lg:flex-col lg:gap-4">
+              <PortfolioSummaryCards
+                holdings={holdings}
+                baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
+                isLoading={holdingsLoading}
+                className="shrink-0"
+              />
+
               <Tabs
-                defaultValue="holdings"
-                className="space-y-6 lg:flex lg:h-full lg:flex-col lg:space-y-4"
+                defaultValue="analytics"
+                className="space-y-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-4"
               >
-                <TabsList className="w-full">
-                  <TabsTrigger value="holdings" className="flex-1">
-                    Holdings
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics" className="flex-1">
+                <TabsList className="w-full rounded-full">
+                  <TabsTrigger value="analytics" className="flex-1 rounded-full">
                     Analytics
                   </TabsTrigger>
+                  <TabsTrigger value="holdings" className="flex-1 rounded-full">
+                    Holdings
+                  </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="analytics" className="mt-0 lg:min-h-0 lg:flex-1">
+                  <PortfolioAnalytics
+                    holdings={holdings}
+                    baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
+                    className="lg:h-full"
+                  />
+                </TabsContent>
 
                 <TabsContent value="holdings" className="mt-0 lg:min-h-0 lg:flex-1">
                   <Card className="lg:flex lg:h-full lg:flex-col">
@@ -316,14 +332,6 @@ export function PortfoliosPage() {
                       )}
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                <TabsContent value="analytics" className="mt-0 lg:min-h-0 lg:flex-1">
-                  <PortfolioAnalytics
-                    holdings={holdings}
-                    baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
-                    className="lg:h-full"
-                  />
                 </TabsContent>
               </Tabs>
             </div>

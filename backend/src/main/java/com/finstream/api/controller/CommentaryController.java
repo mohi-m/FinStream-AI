@@ -38,4 +38,25 @@ public class CommentaryController {
         PortfolioCommentaryResponse response = commentaryService.generateCommentary(portfolioId, firebaseUid);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Force commentary regeneration while bypassing the cached response.
+     *
+     * <p>
+     * This endpoint always calls the LLM pipeline and refreshes the cache entry
+     * for subsequent reads.
+     *
+     * @param firebaseUid user identity (from request header)
+     * @param portfolioId portfolio to analyse
+     * @return freshly generated commentary per ticker
+     */
+    @PostMapping("/{portfolioId}/commentary/refresh")
+    public ResponseEntity<PortfolioCommentaryResponse> refreshCommentary(
+            @RequestHeader("X-Firebase-UID") String firebaseUid,
+            @PathVariable UUID portfolioId) {
+
+        PortfolioCommentaryResponse response = commentaryService
+                .generateCommentaryBypassingCache(portfolioId, firebaseUid);
+        return ResponseEntity.ok(response);
+    }
 }

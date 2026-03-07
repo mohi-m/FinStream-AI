@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { portfolioApi, holdingApi, commentaryApi } from '@/lib/api'
-import type { PortfolioDto, HoldingDto } from '@/lib/api'
+import type { PortfolioDto, HoldingDto, PortfolioCommentaryResponse } from '@/lib/api'
 import { toast } from 'sonner'
 
 export function usePortfolios(page = 0, size = 20) {
@@ -16,6 +16,21 @@ export function useCommentary(portfolioId: string) {
     queryFn: () => commentaryApi.get(portfolioId),
     enabled: !!portfolioId,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export function useRefreshCommentary() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (portfolioId: string) => commentaryApi.refresh(portfolioId),
+    onSuccess: (freshCommentary, portfolioId) => {
+      queryClient.setQueryData<PortfolioCommentaryResponse>(['commentary', portfolioId], freshCommentary)
+      toast.success('Commentary refreshed successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to refresh commentary: ${error.message}`)
+    },
   })
 }
 

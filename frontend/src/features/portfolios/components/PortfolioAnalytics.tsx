@@ -67,8 +67,18 @@ const MODERN_COLORS = {
 const TOOLTIP_STYLE = {
   borderRadius: '0.65rem',
   border: '1px solid hsl(var(--border))',
-  background: 'hsl(var(--background))',
-  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.08)',
+  backgroundColor: 'hsl(var(--popover))',
+  color: 'hsl(var(--popover-foreground))',
+  boxShadow: '0 12px 28px rgba(15, 23, 42, 0.18)',
+}
+
+const TOOLTIP_LABEL_STYLE = {
+  color: 'hsl(var(--popover-foreground))',
+  fontWeight: 600,
+}
+
+const TOOLTIP_ITEM_STYLE = {
+  color: 'hsl(var(--popover-foreground))',
 }
 
 function collapseSectors(rows: SectorAnalyticsRow[], limit = 4): SectorAnalyticsRow[] {
@@ -241,10 +251,6 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
 
     const sortedStockRows = [...rows].sort((a, b) => b.marketValue - a.marketValue)
     const totalMarketValue = rows.reduce((sum, row) => sum + row.marketValue, 0)
-    const totalInvestedAmount = rows.reduce((sum, row) => sum + row.investedAmount, 0)
-    const profitLoss = totalMarketValue - totalInvestedAmount
-    const profitLossPercent =
-      totalInvestedAmount > 0 ? (profitLoss / totalInvestedAmount) * 100 : 0
 
     const sectorMap = new Map<string, SectorAnalyticsRow>()
     rows.forEach((row) => {
@@ -274,7 +280,8 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     }))
 
     const topSector = [...sortedSectorRows].sort((a, b) => b.profitLoss - a.profitLoss)[0] || null
-    const bottomSector = [...sortedSectorRows].sort((a, b) => a.profitLoss - b.profitLoss)[0] || null
+    const bottomSector =
+      [...sortedSectorRows].sort((a, b) => a.profitLoss - b.profitLoss)[0] || null
 
     const stockChartRows = collapseStocks(sortedStockRows)
 
@@ -282,16 +289,10 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     const topLoser = [...sortedStockRows].sort((a, b) => a.profitLoss - b.profitLoss)[0] || null
 
     return {
-      rows: sortedStockRows,
-      sectorRows: sortedSectorRows,
       sectorChartRows,
       topSector,
       bottomSector,
       stockChartRows,
-      totalMarketValue,
-      totalInvestedAmount,
-      profitLoss,
-      profitLossPercent,
       topGainer,
       topLoser,
     }
@@ -319,11 +320,6 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
           <CardTitle>Portfolio Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            {[1, 2, 3].map((item) => (
-              <Skeleton key={item} className="h-20" />
-            ))}
-          </div>
           <Skeleton className="h-72" />
         </CardContent>
       </Card>
@@ -339,13 +335,6 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     ...analytics.sectorChartRows.map((row) => wrapSectorTickLabel(row.sector).length)
   )
   const sectorXAxisHeight = 22 + (sectorTickLineCount - 1) * 13
-
-  const profitLossClassName =
-    analytics.profitLoss > 0
-      ? 'text-green-600'
-      : analytics.profitLoss < 0
-        ? 'text-red-600'
-        : 'text-foreground'
 
   const formatTooltipCurrency = (value: number | string | undefined) =>
     formatCurrency(Number(value ?? 0), baseCurrency)
@@ -385,7 +374,9 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">PnL</span>
-            <span className={cn('font-medium', row.profitLoss >= 0 ? 'text-green-600' : 'text-red-600')}>
+            <span
+              className={cn('font-medium', row.profitLoss >= 0 ? 'text-green-600' : 'text-red-600')}
+            >
               {formatCurrency(row.profitLoss, baseCurrency)}
             </span>
           </div>
@@ -396,38 +387,21 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
 
   return (
     <Card className={cn('flex h-full min-h-120 flex-col overflow-hidden', className)}>
-      <CardHeader className="pb-3">
-        <CardTitle>Portfolio Analytics</CardTitle>
-      </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="rounded-lg border bg-muted/30 px-3 py-2">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Market Value</p>
-            <p className="text-xl font-semibold text-primary">
-              {formatCurrency(analytics.totalMarketValue, baseCurrency)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-muted/30 px-3 py-2">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Invested</p>
-            <p className="text-xl font-semibold">
-              {formatCurrency(analytics.totalInvestedAmount, baseCurrency)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-muted/30 px-3 py-2">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Net PnL</p>
-            <p className={`text-xl font-semibold ${profitLossClassName}`}>
-              {formatCurrency(analytics.profitLoss, baseCurrency)}
-            </p>
-            <p className={`text-xs ${profitLossClassName}`}>
-              {formatPercent(analytics.profitLossPercent)} overall return
-            </p>
-          </div>
-        </div>
-
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 pt-5">
         <Tabs defaultValue="sector" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="sector">By Sector</TabsTrigger>
-            <TabsTrigger value="stocks">By Stocks</TabsTrigger>
+          <TabsList className="mx-auto flex h-auto w-fit rounded-full border border-border/70 bg-muted/40 p-1">
+            <TabsTrigger
+              value="sector"
+              className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              By Sector
+            </TabsTrigger>
+            <TabsTrigger
+              value="stocks"
+              className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              By Stocks
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="sector" className="mt-3 flex min-h-0 flex-1 flex-col">
@@ -465,66 +439,72 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Investment vs Market Value</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      Investment vs Market Value
+                    </p>
                   </div>
 
                   <div className="min-h-0 flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={analytics.sectorChartRows}
-                      margin={{ top: 8, right: 16, left: 4, bottom: 12 }}
-                    >
-                      <defs>
-                        <linearGradient id="sectorInvestedGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={MODERN_COLORS.sectorInvestedStart} />
-                          <stop offset="100%" stopColor={MODERN_COLORS.sectorInvestedEnd} />
-                        </linearGradient>
-                        <linearGradient id="sectorMarketGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={MODERN_COLORS.sectorMarketStart} />
-                          <stop offset="100%" stopColor={MODERN_COLORS.sectorMarketEnd} />
-                        </linearGradient>
-                      </defs>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analytics.sectorChartRows}
+                        margin={{ top: 8, right: 16, left: 4, bottom: 12 }}
+                      >
+                        <defs>
+                          <linearGradient id="sectorInvestedGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={MODERN_COLORS.sectorInvestedStart} />
+                            <stop offset="100%" stopColor={MODERN_COLORS.sectorInvestedEnd} />
+                          </linearGradient>
+                          <linearGradient id="sectorMarketGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={MODERN_COLORS.sectorMarketStart} />
+                            <stop offset="100%" stopColor={MODERN_COLORS.sectorMarketEnd} />
+                          </linearGradient>
+                        </defs>
 
-                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis
-                        dataKey="sector"
-                        tick={renderWrappedSectorTick}
-                        axisLine={false}
-                        tickLine={false}
-                        tickMargin={4}
-                        interval={0}
-                        height={sectorXAxisHeight}
-                      />
-                      <YAxis
-                        width={64}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        tickFormatter={(value) => formatCompactNumber(Number(value))}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        content={renderSectorTooltip}
-                        cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
-                        isAnimationActive={false}
-                      />
-                      <Bar
-                        dataKey="investedAmount"
-                        name="Invested"
-                        fill="url(#sectorInvestedGradient)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={20}
-                        isAnimationActive={false}
-                      />
-                      <Bar
-                        dataKey="marketValue"
-                        name="Market Value"
-                        fill="url(#sectorMarketGradient)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={20}
-                        isAnimationActive={false}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                        <CartesianGrid
+                          strokeDasharray="4 4"
+                          vertical={false}
+                          stroke="hsl(var(--border))"
+                        />
+                        <XAxis
+                          dataKey="sector"
+                          tick={renderWrappedSectorTick}
+                          axisLine={false}
+                          tickLine={false}
+                          tickMargin={4}
+                          interval={0}
+                          height={sectorXAxisHeight}
+                        />
+                        <YAxis
+                          width={64}
+                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                          tickFormatter={(value) => formatCompactNumber(Number(value))}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          content={renderSectorTooltip}
+                          cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
+                          isAnimationActive={false}
+                        />
+                        <Bar
+                          dataKey="investedAmount"
+                          name="Invested"
+                          fill="url(#sectorInvestedGradient)"
+                          radius={[8, 8, 0, 0]}
+                          barSize={20}
+                          isAnimationActive={false}
+                        />
+                        <Bar
+                          dataKey="marketValue"
+                          name="Market Value"
+                          fill="url(#sectorMarketGradient)"
+                          radius={[8, 8, 0, 0]}
+                          barSize={20}
+                          isAnimationActive={false}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -554,7 +534,11 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         </linearGradient>
                       </defs>
 
-                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" />
+                      <CartesianGrid
+                        strokeDasharray="4 4"
+                        vertical={false}
+                        stroke="hsl(var(--border))"
+                      />
                       <XAxis
                         dataKey="tickerId"
                         tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
@@ -575,7 +559,8 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         formatter={formatTooltipCurrency}
                         cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
                         contentStyle={TOOLTIP_STYLE}
-                        labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
+                        labelStyle={TOOLTIP_LABEL_STYLE}
+                        itemStyle={TOOLTIP_ITEM_STYLE}
                         isAnimationActive={false}
                       />
                       <Bar
@@ -611,7 +596,11 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         layout="vertical"
                         margin={{ top: 8, right: 8, left: 0, bottom: 6 }}
                       >
-                        <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="hsl(var(--border))" />
+                        <CartesianGrid
+                          strokeDasharray="4 4"
+                          horizontal={false}
+                          stroke="hsl(var(--border))"
+                        />
                         <XAxis
                           type="number"
                           tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
@@ -632,10 +621,16 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           formatter={formatTooltipCurrency}
                           cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
                           contentStyle={TOOLTIP_STYLE}
-                          labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
+                          labelStyle={TOOLTIP_LABEL_STYLE}
+                          itemStyle={TOOLTIP_ITEM_STYLE}
                           isAnimationActive={false}
                         />
-                        <Bar dataKey="profitLoss" name="PnL" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                        <Bar
+                          dataKey="profitLoss"
+                          name="PnL"
+                          radius={[0, 4, 4, 0]}
+                          isAnimationActive={false}
+                        >
                           {analytics.stockChartRows.map((stock) => (
                             <Cell
                               key={stock.tickerId}
@@ -656,7 +651,9 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                         Top Gainer
                       </p>
-                      <p className="text-sm font-semibold">{analytics.topGainer?.tickerId || '-'}</p>
+                      <p className="text-sm font-semibold">
+                        {analytics.topGainer?.tickerId || '-'}
+                      </p>
                       <p className="text-xs text-green-600">
                         {analytics.topGainer
                           ? formatCurrency(analytics.topGainer.profitLoss, baseCurrency)

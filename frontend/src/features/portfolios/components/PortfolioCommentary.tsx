@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
   Badge,
+  Button,
   Skeleton,
   Tabs,
   TabsList,
@@ -17,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui'
-import { useCommentary } from '../hooks'
-import { Bot, FileText, AlertCircle, Clock } from 'lucide-react'
+import { useCommentary, useRefreshCommentary } from '../hooks'
+import { Bot, FileText, AlertCircle, Clock, RefreshCw } from 'lucide-react'
 import type { TickerCommentaryDto } from '@/lib/api'
 
 interface PortfolioCommentaryProps {
@@ -27,6 +28,27 @@ interface PortfolioCommentaryProps {
 
 const commentaryCardClassName =
   'relative flex h-full flex-col overflow-hidden border-primary/30 bg-gradient-to-b from-primary/5 via-card to-card shadow-xl shadow-primary/10'
+
+function RefreshCommentaryButton({
+  isRefreshing,
+  onRefresh,
+}: {
+  isRefreshing: boolean
+  onRefresh: () => void
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onRefresh}
+      disabled={isRefreshing}
+      className="w-fit shrink-0 border-primary/30 bg-background/80"
+    >
+      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+      {isRefreshing ? 'Refreshing...' : 'Refresh'}
+    </Button>
+  )
+}
 
 function CommentarySection({ text }: { text: string }) {
   return (
@@ -71,19 +93,31 @@ function TickerCommentaryCard({ ticker }: { ticker: TickerCommentaryDto }) {
 
 export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
   const { data: commentary, isLoading, error } = useCommentary(portfolioId)
+  const refreshCommentary = useRefreshCommentary()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedTicker, setSelectedTicker] = useState<string>('')
+  const isRefreshing = refreshCommentary.isPending
+
+  const handleRefreshCommentary = () => {
+    if (!portfolioId || isRefreshing) {
+      return
+    }
+
+    refreshCommentary.mutate(portfolioId)
+  }
 
   if (isLoading) {
     return (
       <Card className={commentaryCardClassName}>
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
         <CardHeader className="relative pb-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <Bot className="h-5 w-5 text-primary animate-pulse" />
-                <CardTitle className="text-xl">AI Commentary</CardTitle>
+                <CardTitle className="text-xl leading-none whitespace-nowrap">
+                  AI Insights
+                </CardTitle>
                 <Badge
                   variant="secondary"
                   className="border border-primary/20 bg-primary/10 text-primary"
@@ -124,26 +158,36 @@ export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
   if (error || !commentary) {
     return (
       <Card className={commentaryCardClassName}>
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
         <CardHeader className="relative pb-3">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            <CardTitle className="text-xl">AI Commentary</CardTitle>
-            <Badge
-              variant="secondary"
-              className="border border-primary/20 bg-primary/10 text-primary"
-            >
-              Flagship Insight
-            </Badge>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Bot className="h-5 w-5 text-primary" />
+                <CardTitle className="text-xl leading-none whitespace-nowrap">
+                  AI Insights
+                </CardTitle>
+                <Badge
+                  variant="secondary"
+                  className="border border-primary/20 bg-primary/10 text-primary"
+                >
+                  GPT 5.3
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Institutional-style intelligence for your portfolio.
+              </p>
+            </div>
+            <RefreshCommentaryButton
+              isRefreshing={isRefreshing}
+              onRefresh={handleRefreshCommentary}
+            />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Institutional-style intelligence for your portfolio.
-          </p>
         </CardHeader>
         <CardContent className="relative">
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <AlertCircle className="h-10 w-10 mb-3 opacity-50" />
-            <p className="text-sm">Unable to load AI commentary.</p>
+            <p className="text-sm">Unable to load AI Insights.</p>
             <p className="text-xs mt-1">Please try again later.</p>
           </div>
         </CardContent>
@@ -153,27 +197,38 @@ export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
 
   return (
     <Card className={commentaryCardClassName}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
       <CardHeader className="relative pb-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <Bot className="h-5 w-5 text-primary" />
-              <CardTitle className="text-xl">AI Commentary</CardTitle>
+              <CardTitle className="text-xl leading-none whitespace-nowrap">AI Insights</CardTitle>
               <Badge
                 variant="secondary"
                 className="border border-primary/20 bg-primary/10 text-primary"
               >
-                Flagship Insight
+                GPT 5.3
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Institutional-style intelligence for your portfolio.
             </p>
           </div>
-          <div className="flex w-fit items-center gap-1 rounded-md border border-border/70 bg-background/70 px-2 py-1 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            {new Date(commentary.generatedAt).toLocaleString()}
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <RefreshCommentaryButton
+              isRefreshing={isRefreshing}
+              onRefresh={handleRefreshCommentary}
+            />
+            <div className="flex max-w-full items-center gap-1 rounded-md border border-border/70 bg-background/70 px-2 py-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span className="truncate">
+                {new Date(commentary.generatedAt).toLocaleString([], {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </span>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -183,11 +238,17 @@ export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
           onValueChange={setActiveTab}
           className="flex min-h-0 flex-1 flex-col pt-2"
         >
-          <TabsList className="mb-4 w-full bg-background/70">
-            <TabsTrigger value="overview" className="flex-1">
+          <TabsList className="mb-4 w-full rounded-full border border-primary/20 bg-primary/10 p-1">
+            <TabsTrigger
+              value="overview"
+              className="flex-1 rounded-full data-[state=active]:bg-background/95 data-[state=active]:shadow-sm"
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="tickers" className="flex-1">
+            <TabsTrigger
+              value="tickers"
+              className="flex-1 rounded-full data-[state=active]:bg-background/95 data-[state=active]:shadow-sm"
+            >
               By Ticker ({commentary.commentaries.length})
             </TabsTrigger>
           </TabsList>

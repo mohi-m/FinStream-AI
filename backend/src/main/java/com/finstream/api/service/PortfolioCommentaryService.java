@@ -7,12 +7,13 @@ import com.finstream.api.entity.DimTicker;
 import com.finstream.api.entity.PortfolioHolding;
 import com.finstream.api.entity.UserPortfolio;
 import com.finstream.api.exception.ResourceNotFoundException;
-import com.finstream.api.exception.UnauthorizedAccessException;
 import com.finstream.api.repository.DimTickerRepository;
 import com.finstream.api.repository.PortfolioHoldingRepository;
 import com.finstream.api.repository.UserPortfolioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +65,21 @@ public class PortfolioCommentaryService {
      * @param firebaseUid authenticated user's Firebase UID
      * @return complete commentary response
      */
+    @Cacheable(cacheNames = "portfolioCommentary", key = "#portfolioId.toString() + ':' + #firebaseUid", sync = true)
     public PortfolioCommentaryResponse generateCommentary(UUID portfolioId, String firebaseUid) {
+        return generateCommentaryInternal(portfolioId, firebaseUid);
+    }
+
+    /**
+     * Always regenerate commentary and refresh the cache entry.
+     */
+    @CachePut(cacheNames = "portfolioCommentary", key = "#portfolioId.toString() + ':' + #firebaseUid")
+    public PortfolioCommentaryResponse generateCommentaryBypassingCache(UUID portfolioId, String firebaseUid) {
+        log.info("Regenerating commentary while bypassing cache for portfolio {} (user={})", portfolioId, firebaseUid);
+        return generateCommentaryInternal(portfolioId, firebaseUid);
+    }
+
+    private PortfolioCommentaryResponse generateCommentaryInternal(UUID portfolioId, String firebaseUid) {
         log.info("Generating commentary for portfolio {} (user={})", portfolioId, firebaseUid);
 
         // 1. Verify ownership
