@@ -397,25 +397,6 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     )
   }
 
-  const renderPnlLegend = () => (
-    <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium text-muted-foreground">
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: MODERN_COLORS.pnlPositive }}
-        />
-        Positive
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className="inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: MODERN_COLORS.pnlNegative }}
-        />
-        Negative
-      </span>
-    </div>
-  )
-
   return (
     <Card className={cn('flex h-full min-h-120 flex-col overflow-hidden', className)}>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3 pt-5">

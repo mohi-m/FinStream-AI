@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import {
   Card,
   CardContent,
@@ -53,7 +54,9 @@ function RefreshCommentaryButton({
 function CommentarySection({ text }: { text: string }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-headings:text-sm prose-headings:font-semibold prose-headings:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-1.5 prose-li:text-muted-foreground prose-li:my-0.5 prose-strong:text-foreground prose-ul:my-1.5 prose-ol:my-1.5 prose-hr:my-3 prose-hr:border-border">
-      <ReactMarkdown>{text}</ReactMarkdown>
+      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+        {text}
+      </ReactMarkdown>
     </div>
   )
 }

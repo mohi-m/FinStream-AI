@@ -56,10 +56,10 @@ public interface TickerCommentaryAiService {
     
     Use exactly these four Markdown headers in this order:
     
-    ## Portfolio Health
-    ## Top Sector
-    ## Biggest Risk
-    ## Diversification Score
+    ## Portfolio Health - health status label
+    ## Top Sector - sector name
+    ## Biggest Risk - main risk phrase
+    ## Diversification Score - score out of 10
     
     Formatting rules:
     - Each section must contain one short paragraph of 2 to 3 sentences.
