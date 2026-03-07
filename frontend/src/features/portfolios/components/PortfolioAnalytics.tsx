@@ -19,6 +19,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -52,10 +53,10 @@ interface SectorChartRow extends SectorAnalyticsRow {
 }
 
 const MODERN_COLORS = {
-  sectorInvestedStart: '#7dd3fc',
-  sectorInvestedEnd: '#0284c7',
-  sectorMarketStart: '#5eead4',
-  sectorMarketEnd: '#0f766e',
+  sectorInvestedStart: '#fde68a',
+  sectorInvestedEnd: '#d97706',
+  sectorMarketStart: '#93c5fd',
+  sectorMarketEnd: '#2563eb',
   stockInvestedStart: '#fde68a',
   stockInvestedEnd: '#d97706',
   stockMarketStart: '#93c5fd',
@@ -138,6 +139,9 @@ function collapseStocks(rows: StockAnalyticsRow[], limit = 8): StockAnalyticsRow
 }
 
 const SECTOR_TICK_MAX_CHARS = 14
+const SECTOR_TICK_LINE_HEIGHT = 13
+const SECTOR_TICK_Y_OFFSET = 18
+const SECTOR_XAXIS_TICK_MARGIN = 10
 
 function splitLongToken(token: string, maxCharsPerLine: number): string[] {
   if (token.length <= maxCharsPerLine) {
@@ -195,9 +199,16 @@ function renderWrappedSectorTick(props: {
 
   return (
     <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} dy={14} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={12}>
+      <text
+        x={0}
+        y={0}
+        dy={SECTOR_TICK_Y_OFFSET}
+        textAnchor="middle"
+        fill="hsl(var(--foreground))"
+        fontSize={12}
+      >
         {lines.map((line, index) => (
-          <tspan key={`${label}-${index}`} x={0} dy={index === 0 ? 0 : 13}>
+          <tspan key={`${label}-${index}`} x={0} dy={index === 0 ? 0 : SECTOR_TICK_LINE_HEIGHT}>
             {line}
           </tspan>
         ))}
@@ -334,7 +345,8 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     1,
     ...analytics.sectorChartRows.map((row) => wrapSectorTickLabel(row.sector).length)
   )
-  const sectorXAxisHeight = 22 + (sectorTickLineCount - 1) * 13
+  const sectorXAxisHeight =
+    SECTOR_TICK_Y_OFFSET + 8 + (sectorTickLineCount - 1) * SECTOR_TICK_LINE_HEIGHT
 
   const formatTooltipCurrency = (value: number | string | undefined) =>
     formatCurrency(Number(value ?? 0), baseCurrency)
@@ -384,6 +396,25 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
       </div>
     )
   }
+
+  const renderPnlLegend = () => (
+    <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: MODERN_COLORS.pnlPositive }}
+        />
+        Positive
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: MODERN_COLORS.pnlNegative }}
+        />
+        Negative
+      </span>
+    </div>
+  )
 
   return (
     <Card className={cn('flex h-full min-h-120 flex-col overflow-hidden', className)}>
@@ -461,6 +492,19 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           </linearGradient>
                         </defs>
 
+                        <Legend
+                          verticalAlign="top"
+                          align="right"
+                          iconType="circle"
+                          iconSize={8}
+                          wrapperStyle={{ paddingBottom: '0.5rem' }}
+                          formatter={(value) => (
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {value}
+                            </span>
+                          )}
+                        />
+
                         <CartesianGrid
                           strokeDasharray="4 4"
                           vertical={false}
@@ -471,7 +515,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           tick={renderWrappedSectorTick}
                           axisLine={false}
                           tickLine={false}
-                          tickMargin={4}
+                          tickMargin={SECTOR_XAXIS_TICK_MARGIN}
                           interval={0}
                           height={sectorXAxisHeight}
                         />
@@ -493,7 +537,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           fill="url(#sectorInvestedGradient)"
                           radius={[8, 8, 0, 0]}
                           barSize={20}
-                          isAnimationActive={false}
+                          isAnimationActive={true}
                         />
                         <Bar
                           dataKey="marketValue"
@@ -501,7 +545,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           fill="url(#sectorMarketGradient)"
                           radius={[8, 8, 0, 0]}
                           barSize={20}
-                          isAnimationActive={false}
+                          isAnimationActive={true}
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -533,6 +577,17 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           <stop offset="100%" stopColor={MODERN_COLORS.stockMarketEnd} />
                         </linearGradient>
                       </defs>
+
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ paddingBottom: '0.5rem' }}
+                        formatter={(value) => (
+                          <span className="text-xs font-medium text-muted-foreground">{value}</span>
+                        )}
+                      />
 
                       <CartesianGrid
                         strokeDasharray="4 4"
@@ -569,7 +624,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         fill="url(#stockInvestedGradient)"
                         radius={[8, 8, 0, 0]}
                         barSize={18}
-                        isAnimationActive={false}
+                        isAnimationActive={true}
                       />
                       <Bar
                         dataKey="marketValue"
@@ -577,7 +632,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         fill="url(#stockMarketGradient)"
                         radius={[8, 8, 0, 0]}
                         barSize={18}
-                        isAnimationActive={false}
+                        isAnimationActive={true}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -596,6 +651,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                         layout="vertical"
                         margin={{ top: 8, right: 8, left: 0, bottom: 6 }}
                       >
+                        {' '}
                         <CartesianGrid
                           strokeDasharray="4 4"
                           horizontal={false}
@@ -629,7 +685,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           dataKey="profitLoss"
                           name="PnL"
                           radius={[0, 4, 4, 0]}
-                          isAnimationActive={false}
+                          isAnimationActive={true}
                         >
                           {analytics.stockChartRows.map((stock) => (
                             <Cell
