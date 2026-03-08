@@ -3,6 +3,7 @@ package com.finstream.api.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,9 @@ public final class CommentaryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class PortfolioCommentaryResponse {
+    public static class PortfolioCommentaryResponse implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         private UUID portfolioId;
         private String portfolioName;
         private String portfolioOverview;
@@ -39,7 +42,9 @@ public final class CommentaryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class TickerCommentary {
+    public static class TickerCommentary implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         private String tickerId;
         private String companyName;
         private String sector;
@@ -55,7 +60,9 @@ public final class CommentaryDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class SecFilingChunk {
+    public static class SecFilingChunk implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         private String ticker;
         private int filingYear;
         private String filingType;
