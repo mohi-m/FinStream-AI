@@ -23,7 +23,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8081
+  port: 8080
   forward-headers-strategy: framework
   servlet:
     context-path: /
@@ -70,4 +70,4 @@ commentary:
   retrieval:
     max-chunks: 15
   parallel:
-    max-workers: 6
+    max-workers: 3
