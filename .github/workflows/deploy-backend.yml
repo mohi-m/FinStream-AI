@@ -20,6 +20,10 @@ jobs:
   deploy:
     name: Build and Deploy Backend to EC2
     runs-on: ubuntu-latest
+    env:
+      REMOTE_APP_DIR: /home/ec2-user/finstream
+      JAR_NAME: finstream-api-1.0.0.jar
+      SERVICE_NAME: finstream.service
 
     steps:
       - name: Checkout repository
@@ -36,17 +40,15 @@ jobs:
         working-directory: backend
         run: mvn -B -DskipTests clean package
 
-      - name: Prepare deployment artifact
+      - name: Verify deployable jar exists
         shell: bash
         run: |
           set -euo pipefail
-          JAR_PATH=$(find backend/target -maxdepth 1 -type f -name "*.jar" ! -name "original-*.jar" | head -n 1)
-          if [ -z "${JAR_PATH}" ]; then
-            echo "No deployable jar found in backend/target"
+          if [ ! -f "backend/target/${JAR_NAME}" ]; then
+            echo "Expected artifact backend/target/${JAR_NAME} not found"
             exit 1
           fi
-          cp "${JAR_PATH}" backend/target/app.jar
-          echo "Using artifact: ${JAR_PATH}"
+          echo "Using artifact: backend/target/${JAR_NAME}"
 
       - name: Copy jar to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -55,8 +57,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
-          source: "backend/target/app.jar"
-          target: ${{ secrets.EC2_APP_DIR }}
+          source: "backend/target/${{ env.JAR_NAME }}"
+          target: ${{ env.REMOTE_APP_DIR }}
           strip_components: 2
           overwrite: true
 
@@ -70,16 +72,10 @@ jobs:
           script_stop: true
           script: |
             set -e
-            cd "${{ secrets.EC2_APP_DIR }}"
-            if [ -f .env ]; then
-              set -a
-              . ./.env
-              set +a
+            if [ ! -f "${{ env.REMOTE_APP_DIR }}/${{ env.JAR_NAME }}" ]; then
+              echo "Deployed jar not found at ${{ env.REMOTE_APP_DIR }}/${{ env.JAR_NAME }}"
+              exit 1
             fi
-            chmod +x start.sh
-            pkill -f 'java.*(finstream|app\.jar)' || true
-            sleep 2
-            ./start.sh
-            sleep 3
-            pgrep -f 'java.*(finstream|app\.jar)' > /dev/null
-            echo "Backend restarted successfully."
+            sudo systemctl restart ${{ env.SERVICE_NAME }}
+            sudo systemctl is-active --quiet ${{ env.SERVICE_NAME }}
+            echo "Backend restarted successfully via systemd."
