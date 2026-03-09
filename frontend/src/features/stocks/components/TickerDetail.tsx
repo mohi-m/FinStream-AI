@@ -5,9 +5,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Badge,
   Skeleton,
   Button,
@@ -56,7 +53,7 @@ export function TickerDetail({
   maxSize,
 }: TickerDetailProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('3M')
-  const [reportType, setReportType] = useState<'annual' | 'quarterly'>('annual')
+  const reportType = 'quarterly'
 
   const { data: ticker, isLoading: tickerLoading } = useTicker(tickerId)
   const { data: latestPrice, isLoading: priceLoading } = useLatestPrice(tickerId)
@@ -300,18 +297,7 @@ export function TickerDetail({
       {/* Financials */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Financials</CardTitle>
-            <Tabs
-              value={reportType}
-              onValueChange={(v) => setReportType(v as 'annual' | 'quarterly')}
-            >
-              <TabsList>
-                <TabsTrigger value="annual">Annual</TabsTrigger>
-                <TabsTrigger value="quarterly">Quarterly</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          <CardTitle>Financials</CardTitle>
         </CardHeader>
         <CardContent>
           {latestFinancial ? (

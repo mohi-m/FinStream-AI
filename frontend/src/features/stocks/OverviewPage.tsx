@@ -122,7 +122,7 @@ export function OverviewPage() {
             </CardHeader>
 
             <CardContent className="relative p-5 pt-0 lg:min-h-0 lg:flex-1 lg:p-4 lg:pt-0">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:h-full lg:auto-rows-fr lg:gap-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:auto-rows-max lg:content-start lg:gap-3">
                 {topTickersLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <Card

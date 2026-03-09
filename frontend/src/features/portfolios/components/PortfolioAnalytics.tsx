@@ -403,16 +403,16 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
         <Tabs defaultValue="sector" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="mx-auto flex h-auto w-fit rounded-full border border-border/70 bg-muted/40 p-1">
             <TabsTrigger
-              value="sector"
-              className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-            >
-              By Sector
-            </TabsTrigger>
-            <TabsTrigger
               value="stocks"
               className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
             >
               By Stocks
+            </TabsTrigger>
+            <TabsTrigger
+              value="sector"
+              className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            >
+              By Sector
             </TabsTrigger>
           </TabsList>
 
