@@ -6,6 +6,7 @@ import com.finstream.api.exception.ResourceNotFoundException;
 import com.finstream.api.repository.DimTickerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ public class DimTickerService {
         return new PageImpl<>(dtos, pageable, tickers.getTotalElements());
     }
 
+    @Cacheable(cacheNames = "tickerById", key = "#tickerId == null ? '' : #tickerId.trim().toUpperCase()", sync = true)
     public TickerDto getTicker(String tickerId) {
         log.debug("Fetching ticker details for tickerId: {}", tickerId);
         DimTicker ticker = dimTickerRepository.findById(tickerId)
@@ -43,11 +45,14 @@ public class DimTickerService {
         return mapToDto(ticker);
     }
 
+    @Cacheable(cacheNames = "tickerSectors", key = "'all'", sync = true)
     public List<String> getSectors() {
         log.debug("Fetching distinct sectors");
         return dimTickerRepository.findDistinctSectors();
     }
 
+    @Cacheable(cacheNames = "topTickersByWeeklyGain", key = "(#limit == null ? 5 : T(java.lang.Math).max(1, T(java.lang.Math).min(#limit, 50)))"
+            + " + ':' + (#sector == null || #sector.isBlank() ? 'ALL' : #sector.trim())", sync = true)
     public List<TickerDto> getTopTickersByWeeklyGain(Integer limit, String sector) {
         int effectiveLimit = limit == null ? 5 : Math.max(1, Math.min(limit, 50));
         String effectiveSector = sector != null && !sector.isBlank() ? sector.trim() : null;
