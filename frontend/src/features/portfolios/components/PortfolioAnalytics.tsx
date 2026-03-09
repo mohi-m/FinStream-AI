@@ -400,7 +400,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
   return (
     <Card className={cn('flex h-full min-h-120 flex-col overflow-hidden', className)}>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3 pt-5">
-        <Tabs defaultValue="sector" className="flex min-h-0 flex-1 flex-col">
+        <Tabs defaultValue="stocks" className="flex min-h-0 flex-1 flex-col">
           <TabsList className="mx-auto flex h-auto w-fit rounded-full border border-border/70 bg-muted/40 p-1">
             <TabsTrigger
               value="stocks"

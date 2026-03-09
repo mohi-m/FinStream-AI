@@ -70,4 +70,4 @@ commentary:
   retrieval:
     max-chunks: 15
   parallel:
-    max-workers: 3
+    max-workers: 6

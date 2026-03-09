@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import {
@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils'
 interface PortfolioCommentaryProps {
   portfolioId: string
 }
+
+const MIN_LOADING_SCREEN_MS = 5000
 
 const commentaryCardClassName =
   'relative isolate flex h-full min-h-0 flex-col overflow-hidden border-primary/30 bg-linear-to-b from-primary/5 via-card to-card shadow-xl shadow-primary/10'
@@ -140,17 +142,34 @@ export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
   const refreshCommentary = useRefreshCommentary()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedTicker, setSelectedTicker] = useState<string>('')
+  const [hasShownMinimumLoading, setHasShownMinimumLoading] = useState(false)
+  const [loadingScreenCycle, setLoadingScreenCycle] = useState(0)
   const isRefreshing = refreshCommentary.isPending
+
+  useEffect(() => {
+    setHasShownMinimumLoading(false)
+
+    const timer = window.setTimeout(() => {
+      setHasShownMinimumLoading(true)
+    }, MIN_LOADING_SCREEN_MS)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [portfolioId, loadingScreenCycle])
+
+  const showLoadingState = isLoading || isRefreshing || !hasShownMinimumLoading
 
   const handleRefreshCommentary = () => {
     if (!portfolioId || isRefreshing) {
       return
     }
 
+    setLoadingScreenCycle((currentCycle) => currentCycle + 1)
     refreshCommentary.mutate(portfolioId)
   }
 
-  if (isLoading) {
+  if (showLoadingState) {
     return (
       <CommentaryCardShell
         animateIcon
