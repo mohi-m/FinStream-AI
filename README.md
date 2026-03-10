@@ -4,16 +4,26 @@
 
 ![FinStream Banner](https://img.shields.io/badge/FinStream-AI%20Powered%20Portfolio%20Management-00C49F?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlsaW5lIHBvaW50cz0iMjIgNyAxMy41IDE1LjUgOC41IDEwLjUgMiAxNyI+PC9wb2x5bGluZT48cG9seWxpbmUgcG9pbnRzPSIxNiA3IDIyIDcgMjIgMTMiPjwvcG9seWxpbmU+PC9zdmc+)
 
-**A modern, full-stack financial portfolio management platform with real-time market data and automated data pipelines.**
+**A modern, full-stack financial portfolio management platform with real-time market data, automated data pipelines, and Agentic RAG AI that turns SEC 10-K forms into actionable portfolio insights.**
 
 [🌐 **Live Demo**](https://finstream.mohi-m.com) &nbsp;•&nbsp; [📡 **API Docs**](https://finstream-api.mohi-m.com/swagger-ui.html)
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Apache Airflow](https://img.shields.io/badge/Airflow-3.1.5-017CEE?logo=apacheairflow&logoColor=white)](https://airflow.apache.org/)
+### Tech Stack
+
+**AI / LLM Stack**  
+[![LangChain](https://img.shields.io/badge/LangChain-1.1.0-00A67E?logo=langchain&logoColor=white)](https://www.langchain.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.8.7-1C3C3C?logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/) [![OpenAI](https://img.shields.io/badge/OpenAI-GPT%205-412991?logo=openai&logoColor=white)](https://platform.openai.com/)
+
+**Backend**  
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot) [![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+
+**Frontend**  
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+**Data & Pipelines**  
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![pgvector](https://img.shields.io/badge/pgvector-RAG-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector) [![Apache Airflow](https://img.shields.io/badge/Airflow-3.1.5-017CEE?logo=apacheairflow&logoColor=white)](https://airflow.apache.org/)
+
+**Infrastructure**  
 [![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20RDS-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
 
 </div>
@@ -26,24 +36,24 @@
 <tr>
 <td width="50%">
 
-### 📊 **Real-Time Market Data**
+### 🤖 **Agentic RAG Portfolio Intelligence**
 
-Browse stocks from the S&P 500 with live price updates and historical price charts powered by automated data pipelines.
+Generate portfolio and ticker commentary through a multi-step LangGraph workflow that retrieves relevant SEC 10-K chunks before producing grounded AI insights.
 
-### 💼 **Portfolio Management**
+### 📚 **SEC Filing Knowledge Base**
 
-Create multiple portfolios, add holdings, and track your investments with comprehensive allocation analytics.
+Process 10-K filings with Airflow pipelines that download, extract, chunk, embed, and upsert filing sections into pgvector for retrieval-augmented analysis.
 
 </td>
 <td width="50%">
 
-### 📈 **Financial Analytics**
+### 📊 **Real-Time Market + Financial Data**
 
-View company financials including revenue, earnings, and cash flow with interactive visualizations.
+Track S&P 500 companies with automated price ingestion, historical charting, and company financials surfaced in a unified research workflow.
 
-### 🔐 **Secure Authentication**
+### 💼 **Portfolio Management + Secure Access**
 
-Sign in seamlessly with Google or GitHub via Firebase Authentication.
+Create portfolios, manage holdings, review allocation analytics, and access the platform securely with Firebase-backed Google or GitHub sign-in.
 
 </td>
 </tr>
@@ -53,325 +63,58 @@ Sign in seamlessly with Google or GitHub via Firebase Authentication.
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                   FRONTEND                                      │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │                         GitHub Pages                                      │  │
-│  │                   finstream.mohi-m.com                                    │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │  │
-│  │  │   React 19  │  │  TanStack   │  │   Recharts  │  │   Firebase  │       │  │
-│  │  │ + TypeScript│  │    Query    │  │   Charts    │  │    Auth     │       │  │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                        │
-                                        │ HTTPS
-                                        ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                                AWS CLOUD                                        │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │                       EC2 Instance                                        │  │
-│  │                finstream-api.mohi-m.com                                   │  │
-│  │                                                                           │  │
-│  │  ┌─────────────────────────┐    ┌─────────────────────────────────────┐   │  │
-│  │  │     Spring Boot 3.3     │    │          Apache Airflow             │   │  │
-│  │  │      REST API           │    │       Scheduled Pipelines           │   │  │
-│  │  │  ┌─────────────────┐    │    │  ┌─────────────────────────────┐    │   │  │
-│  │  │  │   Java 21       │    │    │  │   Daily Price Updates       │    │   │  │
-│  │  │  │   + JPA         │    │    │  │   (yfinance → PostgreSQL)   │    │   │  │
-│  │  │  │   + Flyway      │    │    │  └─────────────────────────────┘    │   │  │
-│  │  │  │   + OpenAPI     │    │    │                                     │   │  │
-│  │  │  └─────────────────┘    │    └─────────────────────────────────────┘   │  │
-│  │  └────────────┬────────────┘                    │                         │  │
-│  │               │                                 │                         │  │
-│  └───────────────┼─────────────────────────────────┼─────────────────────────┘  │
-│                  │                                 │                            │
-│                  │ JDBC                            │ JDBC                       │
-│                  ▼                                 ▼                            │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │                          Amazon RDS                                       │  │
-│  │                        PostgreSQL 16                                      │  │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │  │
-│  │  │  app_user   │  │ dim_ticker  │  │fact_price_  │  │   fact_     │       │  │
-│  │  │             │  │             │  │   daily     │  │ financial   │       │  │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │  │
-│  │  ┌─────────────┐  ┌─────────────┐                                         │  │
-│  │  │   user_     │  │  portfolio_ │                                         │  │
-│  │  │  portfolio  │  │   holding   │                                         │  │
-│  │  └─────────────┘  └─────────────┘                                         │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🔄 Data Pipeline
-
-The platform uses **Apache Airflow** to maintain fresh market data with automated daily updates.
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                         AIRFLOW DAG: finstream_pipeline                       │
-│                            Schedule: Daily @ 6:00 AM UTC                      │
-└──────────────────────────────────────────────────────────────────────────────┘
-                                       │
-                                       ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  ┌────────────┐     ┌────────────┐    ┌────────────┐    ┌────────────┐       │
-│  │  📄 Read   │    │  🔍 Check  │    │  📥 Fetch  │    │  💾 Upsert│       │
-│  │  Tickers   │───▶│   Latest   │───▶│   Missing  │───▶│    Into   │       │
-│  │   (CSV)    │     │   Dates    │    │   Prices   │    │  Postgres  │       │
-│  └────────────┘     └────────────┘    └────────────┘    └────────────┘       │
-│                                                                              │
-│  tickers.csv        fact_price_daily    yfinance API    fact_price_daily     │
-│  ────────────       ──────────────      ────────────    ──────────────       │
-│  AAPL, MSFT         Query max(date)     GET /history    UPSERT rows          │
-│  GOOGL, AMZN        per ticker          for each gap    (ON CONFLICT)        │
-│  NVDA, ...                                                                   │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+![alt text](Finstream_Architecture.jpg)
 
 ---
 
 ## 🖼️ Screenshots
 
+<div align="center">
 ### Landing Page
-
 > Modern, animated landing page with glassmorphism effects
 
-<img src="https://via.placeholder.com/800x450/1a1a2e/00C49F?text=Landing+Page" alt="Landing Page" width="100%"/>
+<img src="https://raw.githubusercontent.com/mohi-m/mohi-m.github.io/main/public/images/projects/finstream_landing.png" alt="Landing Page" width="60%"/>
 
 ### Stocks Dashboard
 
 > Browse S&P 500 stocks with real-time price cards and watchlist management
 
-<img src="https://via.placeholder.com/800x450/1a1a2e/00C49F?text=Stocks+Dashboard" alt="Stocks Dashboard" width="100%"/>
+<img src="https://raw.githubusercontent.com/mohi-m/mohi-m.github.io/main/public/images/projects/finstream_stocks.png" alt="Stocks Dashboard" width="60%"/>
 
 ### Stock Detail View
 
 > Interactive price history charts with financial metrics
 
-<img src="https://via.placeholder.com/800x450/1a1a2e/00C49F?text=Stock+Detail+View" alt="Stock Detail" width="100%"/>
+<img src="https://raw.githubusercontent.com/mohi-m/mohi-m.github.io/main/public/images/projects/finstream_portfolio.png" alt="Stock Detail" width="60%"/>
 
 ### Portfolio Management
 
-> Create portfolios, add holdings, and visualize allocation with pie charts
+> Create portfolios, visualize analytics and view AI insights
 
-<img src="https://via.placeholder.com/800x450/1a1a2e/00C49F?text=Portfolio+Analytics" alt="Portfolio Management" width="100%"/>
-
+<img src="https://raw.githubusercontent.com/mohi-m/mohi-m.github.io/main/public/images/projects/finstream_profile.png" alt="Portfolio Management" width="60%"/>
+</div>
 ---
 
-## 🛠️ Tech Stack
-
-<table>
-<tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Purpose</th>
-</tr>
-<tr>
-<td rowspan="7"><b>Frontend</b></td>
-<td>React 19</td>
-<td>UI Framework</td>
-</tr>
-<tr>
-<td>TypeScript 5.9</td>
-<td>Type Safety</td>
-</tr>
-<tr>
-<td>Vite 7</td>
-<td>Build Tool</td>
-</tr>
-<tr>
-<td>Tailwind CSS 4</td>
-<td>Styling</td>
-</tr>
-<tr>
-<td>shadcn/ui + Radix</td>
-<td>Component Library</td>
-</tr>
-<tr>
-<td>TanStack Query</td>
-<td>Server State Management</td>
-</tr>
-<tr>
-<td>Recharts</td>
-<td>Data Visualization</td>
-</tr>
-<tr>
-<td rowspan="5"><b>Backend</b></td>
-<td>Java 21</td>
-<td>Runtime</td>
-</tr>
-<tr>
-<td>Spring Boot 3.3</td>
-<td>Application Framework</td>
-</tr>
-<tr>
-<td>Spring Data JPA</td>
-<td>ORM</td>
-</tr>
-<tr>
-<td>Flyway</td>
-<td>Database Migrations</td>
-</tr>
-<tr>
-<td>SpringDoc OpenAPI</td>
-<td>API Documentation</td>
-</tr>
-<tr>
-<td rowspan="2"><b>Data Pipeline</b></td>
-<td>Apache Airflow</td>
-<td>Workflow Orchestration</td>
-</tr>
-<tr>
-<td>yfinance</td>
-<td>Market Data Ingestion</td>
-</tr>
-<tr>
-<td rowspan="3"><b>Infrastructure</b></td>
-<td>AWS EC2</td>
-<td>Application Hosting</td>
-</tr>
-<tr>
-<td>AWS RDS</td>
-<td>Managed PostgreSQL</td>
-</tr>
-<tr>
-<td>GitHub Pages</td>
-<td>Static Site Hosting</td>
-</tr>
-<tr>
-<td><b>Auth</b></td>
-<td>Firebase Auth</td>
-<td>OAuth (Google/GitHub)</td>
-</tr>
-</table>
-
----
-
-## 🌐 Live Deployment
-
-| Service         | URL                                                                                          | Hosting      |
-| --------------- | -------------------------------------------------------------------------------------------- | ------------ |
-| 🖥️ **Web App**  | [finstream.mohi-m.com](https://finstream.mohi-m.com)                                         | GitHub Pages |
-| 🔌 **REST API** | [finstream-api.mohi-m.com](https://finstream-api.mohi-m.com)                                 | AWS EC2      |
-| 📖 **API Docs** | [finstream-api.mohi-m.com/swagger-ui.html](https://finstream-api.mohi-m.com/swagger-ui.html) | AWS EC2      |
-
----
-
-## 📁 Project Structure
+## 📁 Monorepo Structure
 
 ```
 FinStream-AI/
-├── 🎨 frontend/                 # React SPA
-│   ├── src/
-│   │   ├── app/                 # App config, routing, providers
-│   │   ├── components/          # UI components (shadcn/ui)
-│   │   ├── features/            # Feature modules
-│   │   │   ├── auth/            # Firebase authentication
-│   │   │   ├── landing/         # Landing page
-│   │   │   ├── stocks/          # Stock browsing & watchlist
-│   │   │   ├── portfolios/      # Portfolio CRUD & analytics
-│   │   │   └── profile/         # User profile
-│   │   └── lib/                 # API client, utilities
-│   └── package.json
-│
-├── ⚙️ backend/                   # Spring Boot API
-│   ├── src/main/java/com/finstream/api/
-│   │   ├── controller/          # REST endpoints
-│   │   ├── service/             # Business logic
-│   │   ├── repository/          # JPA repositories
-│   │   ├── entity/              # Database entities
-│   │   ├── dto/                 # Data transfer objects
-│   │   └── exception/           # Error handling
-│   ├── src/main/resources/
-│   │   └── db/migration/        # Flyway migrations
-│   └── pom.xml
-│
+├── 🎨 frontend/                  # Typescript + React Webpage
+├── ⚙️ backend/                   # Spring Boot API + Agentic RAG AI
 ├── 🔄 airflow/                   # Data pipelines
-│   ├── dags/
-│   │   └── finstream_pipeline.py
-│   ├── plugins/
-│   │   └── fact_price_update.py
-│   └── docker-compose.yaml
-│
 └── 📊 data/                      # Seed scripts
-    └── seed/
 ```
 
 ---
 
 ## 🚀 Quick Start (Development)
 
-<details>
-<summary><b>Prerequisites</b></summary>
+Each part of the monorepo has its own setup guide:
 
-- Node.js 18+
-- Java 21+
-- Docker & Docker Compose
-- PostgreSQL (or use Docker)
-</details>
-
-<details>
-<summary><b>Frontend</b></summary>
-
-```bash
-cd frontend
-pnpm install
-cp .env.example .env  # Configure Firebase credentials
-pnpm dev              # http://localhost:5173
-```
-
-</details>
-
-<details>
-<summary><b>Backend</b></summary>
-
-```bash
-cd backend
-# Start PostgreSQL
-docker-compose up -d
-# Run application
-./mvnw spring-boot:run
-# API available at http://localhost:8080
-```
-
-</details>
-
-<details>
-<summary><b>Airflow</b></summary>
-
-```bash
-cd airflow
-docker-compose up -d
-# Airflow UI at http://localhost:8080
-```
-
-</details>
-
----
-
-## 📄 API Endpoints
-
-| Method   | Endpoint                        | Description              |
-| -------- | ------------------------------- | ------------------------ |
-| `GET`    | `/api/me`                       | Get current user profile |
-| `PUT`    | `/api/me`                       | Update user profile      |
-| `GET`    | `/api/portfolios`               | List user portfolios     |
-| `POST`   | `/api/portfolios`               | Create portfolio         |
-| `GET`    | `/api/portfolios/{id}`          | Get portfolio by ID      |
-| `PUT`    | `/api/portfolios/{id}`          | Update portfolio         |
-| `DELETE` | `/api/portfolios/{id}`          | Delete portfolio         |
-| `GET`    | `/api/portfolios/{id}/holdings` | List holdings            |
-| `POST`   | `/api/portfolios/{id}/holdings` | Add holding              |
-| `GET`    | `/api/tickers`                  | Search tickers           |
-| `GET`    | `/api/tickers/{id}`             | Get ticker details       |
-| `GET`    | `/api/tickers/{id}/prices`      | Get price history        |
-| `GET`    | `/api/tickers/{id}/financials`  | Get financials           |
-
-> 📖 Full API documentation available at [Swagger UI](https://finstream-api.mohi-m.com/swagger-ui.html)
+- [Frontend README](frontend/README.md)
+- [Backend README](backend/README.md)
+- [Airflow README](airflow/README.md)
+- [Seed Scripts README](data/seed/README.md)
 
 ---
 

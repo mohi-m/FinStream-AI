@@ -1,336 +1,208 @@
-# FinStream API - Project Summary
+# FinStream Backend (Spring Boot + Agentic RAG)
 
-## Overview
+This module provides the REST API, portfolio domain logic, and AI commentary orchestration.
 
-A complete, production-grade Spring Boot 3.x REST API for portfolio management and financial data access, built with Java 21, Maven, PostgreSQL, Spring Data JPA, Flyway, and Swagger/OpenAPI.
+## Responsibilities
 
-## Project Structure
+- Portfolio, holdings, ticker, price, and financial REST endpoints.
+- Firebase UID-based user scoping for private resources.
+- Agentic commentary generation via LangGraph4j.
+- Retrieval-augmented generation (RAG) over SEC filing chunks stored in pgvector.
+- In-memory caching for expensive AI and market endpoints.
 
+## Tech Stack
+
+- Java 21
+- Spring Boot 3.5.x
+- Spring Data JPA + Flyway
+- PostgreSQL (transactional DB)
+- pgvector-compatible PostgreSQL (vector DB)
+- LangChain4j + LangGraph4j
+- OpenAI chat and embedding models
+
+## System Design
+
+```text
++----------------------------------+
+| REST Controllers                 |
+| /api/me, /api/tickers, ...       |
++----------------------------------+
+         |
+         v
++----------------------------------+
+| Service Layer                    |
+| domain logic + auth scoping      |
++----------------------------------+
+         |
+  +----------+----------+
+  |                     |
+  v                     v
++---------------------------+   +---------------------------+
+| Primary Postgres (JPA)    |   | Vector Postgres (JDBC)    |
+| app_user, portfolios, ... |   | sec_filing_chunks         |
++---------------------------+   +---------------------------+
+                 |
+                 v
+         +----------------------------------+
+         | SecFilingRetrieverService        |
+         | embed query + cosine similarity  |
+         +----------------------------------+
+                 |
+                 v
+         +----------------------------------+
+         | PortfolioCommentaryGraphService  |
+         | load -> parallel -> summarize    |
+         +----------------------------------+
 ```
+
+## Commentary Pipeline (Agentic Flow)
+
+`PortfolioCommentaryGraphService` uses a graph workflow:
+
+1. `loadPortfolio`: validates ownership and collects ticker IDs.
+2. `generateTickerCommentariesParallel`: fan-out per ticker on worker pool.
+3. `buildPortfolioOverview`: summarizes per-ticker outputs into portfolio-level insight.
+
+Per ticker:
+
+1. Build analysis query.
+2. Retrieve top chunks from `sec_filing_chunks` using pgvector cosine distance.
+3. Send formatted context to `TickerCommentaryAiService` (LangChain4j AI service).
+4. Return structured commentary plus metadata (`filingYear`, `chunksUsed`).
+
+Key files:
+
+- `src/main/java/com/finstream/api/service/PortfolioCommentaryGraphService.java`
+- `src/main/java/com/finstream/api/service/SecFilingRetrieverService.java`
+- `src/main/java/com/finstream/api/service/TickerCommentaryAiService.java`
+- `src/main/java/com/finstream/api/config/LangChainConfig.java`
+
+## API Surface (Core)
+
+- User: `GET /api/me`, `PUT /api/me`
+- Portfolios: `GET/POST /api/portfolios`, `GET/PUT/DELETE /api/portfolios/{id}`
+- Holdings: `GET/POST /api/portfolios/{id}/holdings`, `PUT/DELETE /api/portfolios/{id}/holdings/{tickerId}`
+- Tickers: `GET /api/tickers`, `GET /api/tickers/top`, `GET /api/tickers/sectors`, `GET /api/tickers/{id}`
+- Prices: `GET /api/tickers/{id}/prices`, `GET /api/tickers/{id}/prices/latest`
+- Financials: `GET /api/tickers/{id}/financials`, `GET /api/tickers/{id}/financials/latest`
+- AI Commentary:
+  - `GET /api/portfolios/{portfolioId}/commentary`
+  - `POST /api/portfolios/{portfolioId}/commentary/refresh`
+
+Swagger:
+
+- `http://localhost:8080/swagger-ui.html`
+
+## Environment Variables
+
+Create a local env file (or export variables in your shell):
+
+| Variable               | Purpose                              | Default                                               |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `DB_URL`               | Main transactional database JDBC URL | `jdbc:postgresql://localhost:5432/finstream`          |
+| `DB_USER`              | Main/vector DB username              | `postgres`                                            |
+| `DB_PASSWORD`          | Main/vector DB password              | `postgres`                                            |
+| `VECTOR_DB_URL`        | Vector database JDBC URL             | `jdbc:postgresql://localhost:5432/finstream-pgvector` |
+| `OPENAI_API_KEY`       | OpenAI key for chat + embeddings     | empty                                                 |
+| `CORS_ALLOWED_ORIGINS` | Allowed frontend origins             | `http://localhost:3000,http://localhost:5173`         |
+
+## Database Setup
+
+### 1) Main DB (OLTP)
+
+Create DB:
+
+```bash
+createdb finstream
+```
+
+Run app once and Flyway will apply `V1__init.sql` automatically.
+
+### 2) Vector DB (RAG)
+
+Create DB:
+
+```bash
+createdb finstream-pgvector
+```
+
+Initialize pgvector schema:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS sec_filing_chunks (
+  ticker VARCHAR(10) NOT NULL,
+  filing_year INT NOT NULL,
+  filing_type VARCHAR(16) NOT NULL,
+  filing_period VARCHAR(16) NOT NULL,
+  item_code VARCHAR(32) NOT NULL,
+  chunk_index INT NOT NULL,
+  chunk_text TEXT NOT NULL,
+  embedding VECTOR(1536) NOT NULL,
+  processed_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (ticker, filing_year, filing_type, filing_period, item_code, chunk_index)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sec_filing_chunks_ticker
+  ON sec_filing_chunks (ticker);
+
+CREATE INDEX IF NOT EXISTS idx_sec_filing_chunks_embedding_ivfflat
+  ON sec_filing_chunks USING ivfflat (embedding vector_cosine_ops)
+  WITH (lists = 100);
+```
+
+After loading a meaningful volume of vectors, run:
+
+```sql
+ANALYZE sec_filing_chunks;
+```
+
+## Run Locally
+
+```bash
+cd backend
+mvn clean install
+mvn spring-boot:run
+```
+
+API base URL:
+
+- `http://localhost:8080`
+
+## Quick Verification
+
+```bash
+curl -H "X-Firebase-UID: demo-user" http://localhost:8080/api/me
+```
+
+Commentary endpoint example:
+
+```bash
+curl -H "X-Firebase-UID: demo-user" http://localhost:8080/api/portfolios/<portfolio-uuid>/commentary
+```
+
+## Project Layout
+
+```text
 backend/
-├── pom.xml                          # Maven dependencies (Java 21, Spring Boot 3.3.5)
-├── README.md                        # Full documentation with curl examples
-├── .gitignore                       # Git ignore file
-├── docker-compose.yml               # PostgreSQL local development
-├── src/main/java/com/finstream/api/
-│   ├── FinStreamApiApplication.java # Spring Boot entry point + OpenAPI config
-│   ├── controller/                  # HTTP endpoints
-│   │   ├── AppUserController.java
-│   │   ├── PortfolioController.java
-│   │   ├── HoldingController.java
-│   │   ├── TickerController.java
-│   │   ├── PriceController.java
-│   │   └── FinancialController.java
-│   ├── service/                     # Business logic & authorization
-│   │   ├── AppUserService.java
-│   │   ├── UserPortfolioService.java
-│   │   ├── PortfolioHoldingService.java
-│   │   ├── DimTickerService.java
-│   │   ├── FactPriceDailyService.java
-│   │   └── FactFinancialService.java
-│   ├── repository/                  # JPA data access
-│   │   ├── AppUserRepository.java
-│   │   ├── UserPortfolioRepository.java
-│   │   ├── PortfolioHoldingRepository.java
-│   │   ├── DimTickerRepository.java
-│   │   ├── FactPriceDailyRepository.java
-│   │   └── FactFinancialRepository.java
-│   ├── entity/                      # JPA entities with composite keys
-│   │   ├── AppUser.java
-│   │   ├── DimTicker.java
-│   │   ├── FactFinancial.java
-│   │   ├── FactPriceDaily.java
-│   │   ├── UserPortfolio.java
-│   │   └── PortfolioHolding.java
-│   ├── dto/                         # DTOs for API contracts
-│   │   ├── AppUserDto.java
-│   │   ├── PortfolioDto.java
-│   │   ├── HoldingDto.java
-│   │   ├── TickerDto.java
-│   │   ├── PriceDailyDto.java
-│   │   ├── FinancialDto.java
-│   │   └── ErrorResponse.java
-│   ├── exception/                   # Exception handling
-│   │   ├── ResourceNotFoundException.java
-│   │   ├── UnauthorizedAccessException.java
-│   │   ├── DuplicateResourceException.java
-│   │   └── GlobalExceptionHandler.java
-│   └── config/                      # Spring configuration
-│       └── WebConfig.java
-├── src/main/resources/
-│   ├── application.yml              # App config with env var support
-│   └── db/migration/
-│       └── V1__init.sql             # Flyway migration (schema + indexes)
-├── src/test/
-│   ├── java/com/finstream/api/
-│   │   └── PortfolioIntegrationTest.java  # Testcontainers tests
-│   └── resources/
-│       └── application.yml          # Test-specific config
+- pom.xml
+- src/main/java/com/finstream/api/
+  - config/
+  - controller/
+  - dto/
+  - entity/
+  - exception/
+  - repository/
+  - service/
+- src/main/resources/
+  - application.yml
+  - db/migration/V1__init.sql
+- src/test/resources/application.yml
 ```
 
-## Key Features Implemented
-
-### 1. Authentication & Authorization
-
-- ✅ Accepts Firebase UID via `X-Firebase-UID` header
-- ✅ No token validation (assumes external Firebase auth)
-- ✅ User-scoped resources enforced at service level
-- ✅ 404 responses on unauthorized access (no existence leaks)
-
-### 2. CRUD Operations
-
-- ✅ App User: GET /api/me, PUT /api/me
-- ✅ Portfolios: GET (pageable), POST, GET by ID, PUT, DELETE
-- ✅ Holdings: GET (pageable), POST, PUT, DELETE
-- ✅ Tickers: GET (search + pageable), GET by ID
-- ✅ Prices: GET by date range (pageable), GET latest
-- ✅ Financials: GET by date range (pageable), GET latest
-
-### 3. Database & Schema
-
-- ✅ PostgreSQL with Flyway migrations
-- ✅ 6 tables with proper relationships
-- ✅ Composite primary keys using @EmbeddedId
-- ✅ Indexes on frequently queried columns
-- ✅ Unique constraints (email per user, portfolio name per user)
-- ✅ Check constraints (quantity >= 0, report type validation)
-- ✅ Foreign keys with proper relationships
-
-### 4. Timestamps & Auditing
-
-- ✅ created_at (immutable) and updated_at on all user tables
-- ✅ JPA @PrePersist and @PreUpdate callbacks
-
-### 5. Error Handling
-
-- ✅ Global exception handler with consistent error response format
-- ✅ Field-level validation errors with field names
-- ✅ Proper HTTP status codes:
-  - 201 Created
-  - 204 No Content (delete)
-  - 400 Bad Request (validation)
-  - 404 Not Found
-  - 409 Conflict (duplicate, constraint violations)
-
-### 6. Pagination & Filtering
-
-- ✅ All list endpoints support Spring Data Pageable
-- ✅ Ticker search by contains on tickerId and companyName
-- ✅ Price and financial data filtered by date range
-- ✅ Default page sizes and sorting configured
-
-### 7. Documentation
-
-- ✅ Springdoc OpenAPI integration
-- ✅ Swagger UI at /swagger-ui.html
-- ✅ Complete API documentation with curl examples in README
-
-### 8. Testing
-
-- ✅ Integration tests using Testcontainers
-- ✅ PostgreSQL container auto-provisioned for tests
-- ✅ Test coverage:
-  - Create/read/update/delete operations
-  - Unauthorized access returns 404 (security test)
-  - Duplicate resource validation
-  - User isolation
-
-### 9. Configuration
-
-- ✅ Environment variable support for database connection
-- ✅ Sensible defaults (localhost:5432)
-- ✅ Separate test configuration
-- ✅ Logging configured by environment
-
-### 10. Docker Support
-
-- ✅ docker-compose.yml for local PostgreSQL
-- ✅ Health checks for container readiness
-
-## Technology Stack
-
-| Component     | Technology              | Version  |
-| ------------- | ----------------------- | -------- |
-| Language      | Java                    | 21 LTS   |
-| Framework     | Spring Boot             | 3.3.5    |
-| ORM           | Spring Data JPA         | Included |
-| Database      | PostgreSQL              | 15+      |
-| Migrations    | Flyway                  | Included |
-| Documentation | Springdoc OpenAPI       | 2.4.0    |
-| Testing       | JUnit 5, Testcontainers | 1.19.8   |
-| Build         | Maven                   | 3.8+     |
-| Runtime       | Docker                  | Latest   |
-
-## API Endpoints Summary
-
-### User Management
-
-- `GET /api/me` – Get current user profile
-- `PUT /api/me` – Update current user
-
-### Portfolio Management
-
-- `GET /api/portfolios` – List user portfolios (pageable)
-- `POST /api/portfolios` – Create portfolio
-- `GET /api/portfolios/{id}` – Get portfolio details
-- `PUT /api/portfolios/{id}` – Update portfolio
-- `DELETE /api/portfolios/{id}` – Delete portfolio
-
-### Holdings Management
-
-- `GET /api/portfolios/{id}/holdings` – List holdings (pageable)
-- `POST /api/portfolios/{id}/holdings` – Add holding
-- `PUT /api/portfolios/{id}/holdings/{ticker}` – Update holding
-- `DELETE /api/portfolios/{id}/holdings/{ticker}` – Delete holding
-
-### Public Data (Read-Only)
-
-- `GET /api/tickers` – Search tickers (pageable)
-- `GET /api/tickers/{id}` – Get ticker details
-- `GET /api/tickers/{id}/prices` – Get price history (pageable)
-- `GET /api/tickers/{id}/prices/latest` – Get latest price
-- `GET /api/tickers/{id}/financials` – Get financials (pageable)
-- `GET /api/tickers/{id}/financials/latest` – Get latest financial
-
-## Getting Started
-
-### Prerequisites
-
-```bash
-java --version  # Java 21+
-mvn --version   # Maven 3.8+
-docker --version
-```
-
-### Setup & Run
-
-1. **Start PostgreSQL**
-
-   ```bash
-   cd backend
-   docker-compose up -d
-   ```
-
-2. **Build Project**
-
-   ```bash
-   mvn clean package
-   ```
-
-3. **Run Application**
-
-   ```bash
-   mvn spring-boot:run
-   ```
-
-4. **Access API**
-   - Swagger UI: http://localhost:8080/swagger-ui.html
-   - Example: `curl -H "X-Firebase-UID: user-123" http://localhost:8080/api/me`
-
-### Run Tests
-
-```bash
-mvn test
-```
-
-## Code Quality
-
-- ✅ Layered architecture (controller → service → repository)
-- ✅ Service layer holds all business logic & authorization
-- ✅ Thin controllers for HTTP handling only
-- ✅ DTOs separate internal entities from API contracts
-- ✅ No N+1 queries (repositories use appropriate fetch strategies)
-- ✅ @Transactional used appropriately
-- ✅ Consistent naming conventions
-- ✅ Comprehensive error messages
-- ✅ Production-ready error handling
-
-## Security Considerations
-
-- ✅ Firebase UID extraction from headers (no validation in this service)
-- ✅ User scoping enforced at service level
-- ✅ 404 responses prevent resource existence leaks
-- ✅ Input validation with Jakarta Validation
-- ✅ SQL injection prevention via JPA parameterized queries
-- ✅ CORS can be added via Spring Security if needed
-
-## Performance Optimizations
-
-- ✅ Composite indexes on (ticker_id, date)
-- ✅ Lazy loading for relationships
-- ✅ Pagination for all list endpoints
-- ✅ Batch insert/update in Hibernate
-- ✅ Efficient date range queries
-
-## Deployment Ready
-
-- ✅ Environment variable configuration
-- ✅ Health checks in docker-compose
-- ✅ Logging configured
-- ✅ Error handling for production
-- ✅ No hardcoded credentials
-- ✅ Stateless API (scale horizontally)
-
-## Files Generated
-
-Total files created: **30+**
-
-- **3** Configuration files (pom.xml, application.yml, docker-compose.yml)
-- **1** Flyway migration (V1\_\_init.sql)
-- **6** Entity classes
-- **7** DTO classes
-- **6** Repository interfaces
-- **6** Service classes
-- **6** Controller classes
-- **4** Exception classes
-- **1** Main application class
-- **1** Web config class
-- **1** Integration test suite
-- **2** Documentation files (README.md, .gitignore)
-
-## Next Steps for Enhancement
-
-1. **Security**
-
-   - Add Spring Security with Firebase token validation
-   - Implement CORS configuration
-   - Add rate limiting
-
-2. **Features**
-
-   - Portfolio performance analytics endpoints
-   - Transaction history tracking
-   - Portfolio comparison
-   - Alerts and notifications
-
-3. **Performance**
-
-   - Redis caching for ticker data
-   - Query optimization for large datasets
-   - GraphQL API alternative
-
-4. **Monitoring**
-   - Actuator endpoints
-   - Prometheus metrics
-   - ELK stack integration
-
-## Verification Checklist
-
-- [x] Code compiles without errors
-- [x] All dependencies in pom.xml
-- [x] Spring Boot 3.x with Java 21
-- [x] PostgreSQL database with Flyway migrations
-- [x] CRUD operations for all entities
-- [x] Pagination and filtering implemented
-- [x] User-scoped authorization
-- [x] Global exception handler
-- [x] OpenAPI/Swagger documentation
-- [x] Integration tests with Testcontainers
-- [x] docker-compose.yml for local PostgreSQL
-- [x] Comprehensive README with curl examples
-- [x] Proper error handling and validation
-- [x] @PrePersist/@PreUpdate timestamp handling
-- [x] Composite keys with @EmbeddedId
-- [x] Read-only endpoints for public data
-- [x] Layered architecture maintained
-- [x] No hardcoded configuration
+## Operational Notes
+
+- Commentary responses are cached (`portfolioCommentary`) and refreshed via explicit refresh endpoint.
+- The API relies on `X-Firebase-UID` for user identity scoping.
+- Frontend may also send `Authorization: Bearer <id-token>`; backend currently scopes by UID header.

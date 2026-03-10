@@ -1,117 +1,160 @@
-# FinStream Frontend
+# FinStream Frontend (React + TypeScript)
 
-A modern financial dashboard built with React, TypeScript, and Vite.
+This module is the user-facing web app for market exploration, portfolio management, and AI-powered portfolio commentary.
 
-## Features
+## Responsibilities
 
-- 📈 **Stock Tracking** - Browse stocks, view price history charts, and manage a personal watchlist
-- 💼 **Portfolio Management** - Create portfolios, add holdings, and track portfolio value
-- 🔐 **Authentication** - Sign in with Google, GitHub, or a shared demo account via Firebase
-- 🌓 **Dark/Light Mode** - Toggle between themes with system preference detection
-- 📊 **Analytics** - Visualize portfolio allocation with interactive charts
+- Authentication flow with Firebase.
+- Portfolio and holdings management UX.
+- Market and financial analytics UI.
+- AI Insights experience for portfolio commentary and refresh control.
 
 ## Tech Stack
 
-- **React 19** with TypeScript
-- **Vite** for blazing fast development
-- **Tailwind CSS** for styling
-- **shadcn/ui** components (Radix UI primitives)
-- **TanStack Query** for server state management
-- **React Router** for navigation
-- **React Hook Form** + **Zod** for form validation
-- **Recharts** for data visualization
-- **Framer Motion** for animations
-- **Firebase** for authentication
+- React 19 + TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query
+- React Router
+- Firebase Auth
+- Recharts
+- React Markdown (`portfolioOverview` and commentary rendering)
 
-## Getting Started
+## System Design
 
-### Prerequisites
+```text
++-------------------------------------------------------+
+| React Application                                     |
+| Router: /, /app/overview, /app/portfolios, /app/profile |
++-------------------------------------------------------+
+                         |
+                         v
++-------------------------------------------------------+
+| Query + API Client Layer                              |
+| - attaches X-Firebase-UID and Bearer token            |
+| - handles 401/session expiry                           |
++-------------------------------------------------------+
+                         |
+                         v
++-------------------------------------------------------+
+| FinStream Backend API                                 |
+| portfolio CRUD, market data, AI commentary endpoints  |
++-------------------------------------------------------+
+```
 
-- Node.js 18+
-- pnpm (recommended) or npm
+## AI Commentary UX Flow
 
-### Installation
+1. User opens portfolio page.
+2. Frontend query hook calls `GET /api/portfolios/{portfolioId}/commentary`.
+3. Backend may serve cached commentary.
+4. User can force regeneration with refresh button:
+   - `POST /api/portfolios/{portfolioId}/commentary/refresh`
+5. Fresh payload updates query cache and UI panels (`Overview` and `By Ticker`).
 
-1. Install dependencies:
+Key files:
 
-   ```bash
-   pnpm install
-   ```
+- `src/features/portfolios/components/PortfolioCommentary.tsx`
+- `src/features/portfolios/hooks/usePortfolios.ts`
+- `src/lib/api/endpoints.ts`
+- `src/lib/api/client.ts`
 
-2. Create a `.env` file based on `.env.example`:
+## Prerequisites
 
-   ```bash
-   cp .env.example .env
-   ```
+- Node.js 20+
+- npm (or pnpm)
 
-3. Configure your Firebase project credentials in `.env`
+## Environment Configuration
 
-4. Start the development server:
-   ```bash
-   pnpm dev
-   ```
+Copy and edit env file:
 
-The app will be available at `http://localhost:5173`
+```bash
+# macOS/Linux
+cp .env.example .env
 
-## Environment Variables
+# Windows PowerShell
+Copy-Item .env.example .env
+```
 
-| Variable                            | Description                                        |
-| ----------------------------------- | -------------------------------------------------- |
-| `VITE_API_BASE_URL`                 | Backend API URL (default: `http://localhost:8080`) |
-| `VITE_FIREBASE_API_KEY`             | Firebase API key                                   |
-| `VITE_FIREBASE_AUTH_DOMAIN`         | Firebase auth domain                               |
-| `VITE_FIREBASE_PROJECT_ID`          | Firebase project ID                                |
-| `VITE_FIREBASE_STORAGE_BUCKET`      | Firebase storage bucket                            |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID                       |
-| `VITE_FIREBASE_APP_ID`              | Firebase app ID                                    |
-| `VITE_DEMO_USER_EMAIL`              | Optional shared demo account email                 |
-| `VITE_DEMO_USER_PASSWORD`           | Optional shared demo account password              |
+Required variables:
 
-## Demo User Setup (Optional)
+| Variable                            | Description                               |
+| ----------------------------------- | ----------------------------------------- |
+| `VITE_API_BASE_URL`                 | Backend URL, e.g. `http://localhost:8080` |
+| `VITE_FIREBASE_API_KEY`             | Firebase config                           |
+| `VITE_FIREBASE_AUTH_DOMAIN`         | Firebase config                           |
+| `VITE_FIREBASE_PROJECT_ID`          | Firebase config                           |
+| `VITE_FIREBASE_STORAGE_BUCKET`      | Firebase config                           |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase config                           |
+| `VITE_FIREBASE_APP_ID`              | Firebase config                           |
 
-1. Enable **Email/Password** in Firebase Authentication providers.
-2. Create a demo account in Firebase Auth (example: `demo@your-domain.com`).
-3. Add `VITE_DEMO_USER_EMAIL` and `VITE_DEMO_USER_PASSWORD` to your `.env`.
-4. The landing page will show a **Try Demo** button that signs into the shared demo account.
+Optional demo login:
+
+| Variable                  | Description                  |
+| ------------------------- | ---------------------------- |
+| `VITE_DEMO_USER_EMAIL`    | Shared demo account email    |
+| `VITE_DEMO_USER_PASSWORD` | Shared demo account password |
+
+## Local Development
+
+Using npm:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Using pnpm:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+Default URL:
+
+- `http://localhost:5173`
+
+## Build and Validate
+
+```bash
+npm run lint
+npm run build
+npm run preview
+```
+
+## Route Map
+
+- `/` -> landing page
+- `/app/overview` -> stocks overview
+- `/app/portfolios` -> portfolio management + AI insights
+- `/app/profile` -> user profile
 
 ## Project Structure
 
+```text
+frontend/
+- src/app/
+    - layouts/
+    - providers/
+    - router.tsx
+- src/components/
+    - common/
+    - ui/
+- src/features/
+    - auth/
+    - landing/
+    - portfolios/
+    - profile/
+    - stocks/
+- src/lib/
+    - api/
+    - firebase/
+    - utils/
 ```
-src/
-├── app/                  # App configuration
-│   ├── layouts/          # Page layouts (Public, App)
-│   ├── providers/        # Context providers (Auth, Theme, Query)
-│   └── router.tsx        # Route definitions
-├── components/
-│   ├── common/           # Shared components
-│   └── ui/               # shadcn/ui components
-├── features/             # Feature modules
-│   ├── auth/             # Authentication
-│   ├── landing/          # Landing page
-│   ├── portfolios/       # Portfolio management
-│   ├── profile/          # User profile
-│   └── stocks/           # Stock browsing
-└── lib/
-    ├── api/              # API client and types
-    ├── firebase/         # Firebase configuration
-    └── utils/            # Utility functions
-```
 
-## Scripts
+## Deployment Notes
 
-| Command        | Description              |
-| -------------- | ------------------------ |
-| `pnpm dev`     | Start development server |
-| `pnpm build`   | Build for production     |
-| `pnpm preview` | Preview production build |
-| `pnpm lint`    | Run ESLint               |
-
-## API Integration
-
-The frontend integrates with the FinStream API. See the backend README for API documentation.
-
-Authentication is handled via Firebase, with the Firebase UID sent in the `X-Firebase-UID` header and the ID token in the `Authorization` header for all API requests.
-
-## License
-
-MIT
+- GitHub Actions workflow builds and deploys to GitHub Pages.
+- Build-time env variables are injected from repository secrets.
