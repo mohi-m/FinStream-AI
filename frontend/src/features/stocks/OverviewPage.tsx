@@ -45,7 +45,7 @@ export function OverviewPage() {
   const selectedTickerParam = searchParams.get('ticker')?.trim().toUpperCase()
   const selectedTicker =
     selectedTickerParam && selectedTickerParam.length > 0 ? selectedTickerParam : null
-  const pageContainerClass = 'mx-auto w-full max-w-screen-2xl px-2 sm:px-3 lg:px-4'
+  const pageContainerClass = 'mx-auto w-full max-w-screen-2xl px-1 sm:px-3 lg:px-4'
 
   const handleSelectTicker = (tickerId: string) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -77,15 +77,15 @@ export function OverviewPage() {
 
   return (
     <div
-      className={`${pageContainerClass} space-y-8 lg:flex lg:h-[calc(100dvh-7.5rem)] lg:flex-col lg:space-y-3`}
+      className={`${pageContainerClass} space-y-6 lg:flex lg:flex-col lg:space-y-3 2xl:h-[calc(100dvh-7.5rem)]`}
     >
       <div>
-        <h1 className="text-3xl font-bold">Overview</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Overview</h1>
         <p className="text-muted-foreground">Market snapshot and watchlist</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12">
-        <div className="space-y-6 lg:col-span-8 lg:flex lg:min-h-0 lg:flex-col lg:space-y-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 2xl:min-h-0 2xl:flex-1">
+        <div className="space-y-6 lg:col-span-8 lg:space-y-3 2xl:flex 2xl:min-h-0 2xl:flex-col">
           <div className="space-y-4">
             {INDEX_TICKERS.map((ticker) => (
               <IndexTickerCard
@@ -97,16 +97,16 @@ export function OverviewPage() {
             ))}
           </div>
 
-          <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+          <Card className="relative overflow-hidden border-border/60 bg-card/80 shadow-lg ring-1 ring-primary/10 2xl:flex 2xl:min-h-0 2xl:flex-1 2xl:flex-col">
             <CardHeader className="relative p-5 pb-3 lg:p-4 lg:pb-2">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
                   <CardTitle className="text-xl">Top stocks</CardTitle>
                   <CardDescription>Top performers over the last 7 days</CardDescription>
                 </div>
 
                 <Select value={sector} onValueChange={setSector}>
-                  <SelectTrigger className="h-8 w-44" disabled={sectorsLoading}>
+                  <SelectTrigger className="h-8 w-full sm:w-44" disabled={sectorsLoading}>
                     <SelectValue placeholder="All sectors" />
                   </SelectTrigger>
                   <SelectContent align="end">
@@ -121,7 +121,7 @@ export function OverviewPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="relative p-5 pt-0 lg:min-h-0 lg:flex-1 lg:p-4 lg:pt-0">
+            <CardContent className="relative p-5 pt-0 lg:p-4 lg:pt-0 2xl:min-h-0 2xl:flex-1">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:auto-rows-max lg:content-start lg:gap-3">
                 {topTickersLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
@@ -163,13 +163,13 @@ export function OverviewPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4 lg:min-h-0">
+        <div className="lg:col-span-4 2xl:min-h-0">
           <WatchlistPanel
             tickerIds={watchlist}
             onSelectTicker={handleSelectTicker}
             onAddTicker={addToWatchlist}
             maxSize={maxSize}
-            className="lg:h-full"
+            className="2xl:h-full"
           />
         </div>
       </div>

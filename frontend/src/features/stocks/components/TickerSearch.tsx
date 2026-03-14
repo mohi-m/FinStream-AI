@@ -56,13 +56,13 @@ export function TickerSearch({
                 ))}
               </div>
             ) : data?.content && data.content.length > 0 ? (
-              <div className="rounded-md border">
-                <Table>
+              <div className="rounded-md border overflow-x-auto">
+                <Table className="min-w-130">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Ticker</TableHead>
                       <TableHead>Company</TableHead>
-                      <TableHead>Sector</TableHead>
+                      <TableHead className="hidden sm:table-cell">Sector</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -72,9 +72,11 @@ export function TickerSearch({
                         className="cursor-pointer"
                         onClick={() => ticker.tickerId && onSelect(ticker)}
                       >
-                        <TableCell className="font-medium">{ticker.tickerId}</TableCell>
-                        <TableCell>{ticker.companyName}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {ticker.tickerId}
+                        </TableCell>
+                        <TableCell className="max-w-55 truncate">{ticker.companyName}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge variant="secondary">{ticker.sector || 'N/A'}</Badge>
                         </TableCell>
                       </TableRow>

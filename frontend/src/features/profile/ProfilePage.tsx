@@ -86,24 +86,24 @@ export function ProfilePage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto space-y-6"
+      className="mx-auto max-w-2xl space-y-6 px-1 sm:px-0"
     >
       <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Profile</h1>
         <p className="text-muted-foreground">Manage your account settings</p>
       </div>
 
       {/* Profile Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
               <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
               <AvatarFallback className="text-2xl">{getInitials(user?.displayName)}</AvatarFallback>
             </Avatar>
-            <div>
-              <CardTitle>{user?.displayName || 'User'}</CardTitle>
-              <CardDescription>{user?.email}</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="truncate">{user?.displayName || 'User'}</CardTitle>
+              <CardDescription className="truncate">{user?.email}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -177,14 +177,14 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Separator />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium">Sign Out</p>
               <p className="text-sm text-muted-foreground">
                 Sign out of your account on this device
               </p>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="outline" onClick={handleSignOut} className="w-full sm:w-auto">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
@@ -199,25 +199,25 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 text-sm">
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-muted-foreground">Provider</span>
-              <span className="font-medium capitalize">
+              <span className="font-medium capitalize sm:text-right">
                 {user?.providerData?.[0]?.providerId?.replace('.com', '') || 'Unknown'}
               </span>
             </div>
             <Separator />
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-muted-foreground">Account Created</span>
-              <span className="font-medium">
+              <span className="font-medium sm:text-right">
                 {user?.metadata?.creationTime
                   ? new Date(user.metadata.creationTime).toLocaleDateString()
                   : 'Unknown'}
               </span>
             </div>
             <Separator />
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-muted-foreground">Last Sign In</span>
-              <span className="font-medium">
+              <span className="font-medium sm:text-right">
                 {user?.metadata?.lastSignInTime
                   ? new Date(user.metadata.lastSignInTime).toLocaleDateString()
                   : 'Unknown'}

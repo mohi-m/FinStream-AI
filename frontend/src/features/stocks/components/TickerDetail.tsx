@@ -102,9 +102,9 @@ export function TickerDetail({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full items-start gap-3 sm:w-auto sm:items-center sm:gap-4">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -115,7 +115,7 @@ export function TickerDetail({
               </>
             ) : (
               <>
-                <h1 className="text-3xl font-bold flex items-center gap-3">
+                <h1 className="flex items-center gap-2 text-2xl font-bold sm:gap-3 sm:text-3xl">
                   {tickerId}
                   {isPositive ? (
                     <TrendingUp className="h-6 w-6 text-green-500" />
@@ -131,6 +131,7 @@ export function TickerDetail({
         <Button
           variant={isInWatchlist(tickerId) ? 'secondary' : 'outline'}
           onClick={handleWatchlistToggle}
+          className="w-full sm:w-auto"
         >
           {isInWatchlist(tickerId) ? (
             <>
@@ -150,9 +151,9 @@ export function TickerDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <CardTitle className="text-4xl">
+                <CardTitle className="text-3xl sm:text-4xl">
                   {priceLoading ? (
                     <Skeleton className="h-10 w-32" />
                   ) : (
@@ -163,7 +164,7 @@ export function TickerDetail({
                   <CardDescription>Last updated: {formatDate(latestPrice.date)}</CardDescription>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {(['1M', '3M', '6M', '1Y', 'MAX'] as TimeRange[]).map((range) => (
                   <Button
                     key={range}
@@ -301,7 +302,7 @@ export function TickerDetail({
         </CardHeader>
         <CardContent>
           {latestFinancial ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
                 <p className="text-xl font-bold">

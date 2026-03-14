@@ -363,7 +363,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
     }
 
     return (
-      <div className="min-w-52" style={TOOLTIP_STYLE}>
+      <div className="max-w-[80vw] min-w-44" style={TOOLTIP_STYLE}>
         <div className="border-b border-border px-3 py-2">
           <p className="text-sm font-semibold text-foreground">{row.sector}</p>
         </div>
@@ -398,10 +398,10 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
   }
 
   return (
-    <Card className={cn('flex h-full min-h-120 flex-col overflow-hidden', className)}>
+    <Card className={cn('flex h-full min-h-128 flex-col overflow-hidden sm:min-h-144', className)}>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3 pt-5">
         <Tabs defaultValue="stocks" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="mx-auto flex h-auto w-fit rounded-full border border-border/70 bg-muted/40 p-1">
+          <TabsList className="mx-auto flex h-auto w-full max-w-xs rounded-full border border-border/70 bg-muted/40 p-1 sm:w-fit sm:max-w-none">
             <TabsTrigger
               value="stocks"
               className="rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
@@ -456,20 +456,109 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                     </p>
                   </div>
 
-                  <div className="min-h-0 flex-1">
+                  <div className="min-h-0 flex-1 overflow-x-auto">
+                    <div className="h-full min-w-140 sm:min-w-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={analytics.sectorChartRows}
+                          margin={{ top: 8, right: 16, left: 4, bottom: 12 }}
+                        >
+                          <defs>
+                            <linearGradient id="sectorInvestedGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={MODERN_COLORS.sectorInvestedStart} />
+                              <stop offset="100%" stopColor={MODERN_COLORS.sectorInvestedEnd} />
+                            </linearGradient>
+                            <linearGradient id="sectorMarketGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={MODERN_COLORS.sectorMarketStart} />
+                              <stop offset="100%" stopColor={MODERN_COLORS.sectorMarketEnd} />
+                            </linearGradient>
+                          </defs>
+
+                          <Legend
+                            verticalAlign="top"
+                            align="right"
+                            iconType="circle"
+                            iconSize={8}
+                            wrapperStyle={{ paddingBottom: '0.5rem' }}
+                            formatter={(value) => (
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {value}
+                              </span>
+                            )}
+                          />
+
+                          <CartesianGrid
+                            strokeDasharray="4 4"
+                            vertical={false}
+                            stroke="hsl(var(--border))"
+                          />
+                          <XAxis
+                            dataKey="sector"
+                            tick={renderWrappedSectorTick}
+                            axisLine={false}
+                            tickLine={false}
+                            tickMargin={SECTOR_XAXIS_TICK_MARGIN}
+                            interval={0}
+                            height={sectorXAxisHeight}
+                          />
+                          <YAxis
+                            width={64}
+                            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                            tickFormatter={(value) => formatCompactNumber(Number(value))}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            content={renderSectorTooltip}
+                            cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
+                            isAnimationActive={false}
+                          />
+                          <Bar
+                            dataKey="investedAmount"
+                            name="Invested"
+                            fill="url(#sectorInvestedGradient)"
+                            radius={[8, 8, 0, 0]}
+                            barSize={20}
+                            isAnimationActive={true}
+                          />
+                          <Bar
+                            dataKey="marketValue"
+                            name="Market Value"
+                            fill="url(#sectorMarketGradient)"
+                            radius={[8, 8, 0, 0]}
+                            barSize={20}
+                            isAnimationActive={true}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="stocks" className="mt-3 flex min-h-0 flex-1 flex-col">
+            <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-5">
+              <Card className="lg:col-span-3 flex min-h-0 flex-col">
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-sm">Stock Value Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent className="min-h-0 flex-1 overflow-x-auto">
+                  <div className="h-full min-w-140 sm:min-w-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={analytics.sectorChartRows}
-                        margin={{ top: 8, right: 16, left: 4, bottom: 12 }}
+                        data={analytics.stockChartRows}
+                        margin={{ top: 8, right: 8, left: 4, bottom: 20 }}
                       >
                         <defs>
-                          <linearGradient id="sectorInvestedGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={MODERN_COLORS.sectorInvestedStart} />
-                            <stop offset="100%" stopColor={MODERN_COLORS.sectorInvestedEnd} />
+                          <linearGradient id="stockInvestedGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={MODERN_COLORS.stockInvestedStart} />
+                            <stop offset="100%" stopColor={MODERN_COLORS.stockInvestedEnd} />
                           </linearGradient>
-                          <linearGradient id="sectorMarketGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={MODERN_COLORS.sectorMarketStart} />
-                            <stop offset="100%" stopColor={MODERN_COLORS.sectorMarketEnd} />
+                          <linearGradient id="stockMarketGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={MODERN_COLORS.stockMarketStart} />
+                            <stop offset="100%" stopColor={MODERN_COLORS.stockMarketEnd} />
                           </linearGradient>
                         </defs>
 
@@ -492,165 +581,18 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           stroke="hsl(var(--border))"
                         />
                         <XAxis
-                          dataKey="sector"
-                          tick={renderWrappedSectorTick}
+                          dataKey="tickerId"
+                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                           axisLine={false}
                           tickLine={false}
-                          tickMargin={SECTOR_XAXIS_TICK_MARGIN}
+                          tickMargin={8}
                           interval={0}
-                          height={sectorXAxisHeight}
+                          height={40}
                         />
                         <YAxis
                           width={64}
                           tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                           tickFormatter={(value) => formatCompactNumber(Number(value))}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          content={renderSectorTooltip}
-                          cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
-                          isAnimationActive={false}
-                        />
-                        <Bar
-                          dataKey="investedAmount"
-                          name="Invested"
-                          fill="url(#sectorInvestedGradient)"
-                          radius={[8, 8, 0, 0]}
-                          barSize={20}
-                          isAnimationActive={true}
-                        />
-                        <Bar
-                          dataKey="marketValue"
-                          name="Market Value"
-                          fill="url(#sectorMarketGradient)"
-                          radius={[8, 8, 0, 0]}
-                          barSize={20}
-                          isAnimationActive={true}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="stocks" className="mt-3 flex min-h-0 flex-1 flex-col">
-            <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-5">
-              <Card className="lg:col-span-3 flex min-h-0 flex-col">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm">Stock Value Breakdown</CardTitle>
-                </CardHeader>
-                <CardContent className="min-h-0 flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={analytics.stockChartRows}
-                      margin={{ top: 8, right: 8, left: 4, bottom: 20 }}
-                    >
-                      <defs>
-                        <linearGradient id="stockInvestedGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={MODERN_COLORS.stockInvestedStart} />
-                          <stop offset="100%" stopColor={MODERN_COLORS.stockInvestedEnd} />
-                        </linearGradient>
-                        <linearGradient id="stockMarketGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={MODERN_COLORS.stockMarketStart} />
-                          <stop offset="100%" stopColor={MODERN_COLORS.stockMarketEnd} />
-                        </linearGradient>
-                      </defs>
-
-                      <Legend
-                        verticalAlign="top"
-                        align="right"
-                        iconType="circle"
-                        iconSize={8}
-                        wrapperStyle={{ paddingBottom: '0.5rem' }}
-                        formatter={(value) => (
-                          <span className="text-xs font-medium text-muted-foreground">{value}</span>
-                        )}
-                      />
-
-                      <CartesianGrid
-                        strokeDasharray="4 4"
-                        vertical={false}
-                        stroke="hsl(var(--border))"
-                      />
-                      <XAxis
-                        dataKey="tickerId"
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        axisLine={false}
-                        tickLine={false}
-                        tickMargin={8}
-                        interval={0}
-                        height={40}
-                      />
-                      <YAxis
-                        width={64}
-                        tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                        tickFormatter={(value) => formatCompactNumber(Number(value))}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        formatter={formatTooltipCurrency}
-                        cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
-                        contentStyle={TOOLTIP_STYLE}
-                        labelStyle={TOOLTIP_LABEL_STYLE}
-                        itemStyle={TOOLTIP_ITEM_STYLE}
-                        isAnimationActive={false}
-                      />
-                      <Bar
-                        dataKey="investedAmount"
-                        name="Invested"
-                        fill="url(#stockInvestedGradient)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={18}
-                        isAnimationActive={true}
-                      />
-                      <Bar
-                        dataKey="marketValue"
-                        name="Market Value"
-                        fill="url(#stockMarketGradient)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={18}
-                        isAnimationActive={true}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="lg:col-span-2 flex min-h-0 flex-col">
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm">PnL by Stock</CardTitle>
-                </CardHeader>
-                <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
-                  <div className="min-h-0 flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={analytics.stockChartRows}
-                        layout="vertical"
-                        margin={{ top: 8, right: 8, left: 0, bottom: 6 }}
-                      >
-                        {' '}
-                        <CartesianGrid
-                          strokeDasharray="4 4"
-                          horizontal={false}
-                          stroke="hsl(var(--border))"
-                        />
-                        <XAxis
-                          type="number"
-                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                          tickFormatter={(value) => formatCompactNumber(Number(value))}
-                          axisLine={false}
-                          tickLine={false}
-                          tickMargin={8}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="tickerId"
-                          width={56}
-                          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                           axisLine={false}
                           tickLine={false}
                         />
@@ -663,24 +605,90 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           isAnimationActive={false}
                         />
                         <Bar
-                          dataKey="profitLoss"
-                          name="PnL"
-                          radius={[0, 4, 4, 0]}
+                          dataKey="investedAmount"
+                          name="Invested"
+                          fill="url(#stockInvestedGradient)"
+                          radius={[8, 8, 0, 0]}
+                          barSize={18}
                           isAnimationActive={true}
-                        >
-                          {analytics.stockChartRows.map((stock) => (
-                            <Cell
-                              key={stock.tickerId}
-                              fill={
-                                stock.profitLoss >= 0
-                                  ? MODERN_COLORS.pnlPositive
-                                  : MODERN_COLORS.pnlNegative
-                              }
-                            />
-                          ))}
-                        </Bar>
+                        />
+                        <Bar
+                          dataKey="marketValue"
+                          name="Market Value"
+                          fill="url(#stockMarketGradient)"
+                          radius={[8, 8, 0, 0]}
+                          barSize={18}
+                          isAnimationActive={true}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2 flex min-h-0 flex-col">
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-sm">PnL by Stock</CardTitle>
+                </CardHeader>
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+                  <div className="min-h-0 flex-1 overflow-x-auto">
+                    <div className="h-full min-w-105 sm:min-w-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={analytics.stockChartRows}
+                          layout="vertical"
+                          margin={{ top: 8, right: 8, left: 0, bottom: 6 }}
+                        >
+                          {' '}
+                          <CartesianGrid
+                            strokeDasharray="4 4"
+                            horizontal={false}
+                            stroke="hsl(var(--border))"
+                          />
+                          <XAxis
+                            type="number"
+                            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                            tickFormatter={(value) => formatCompactNumber(Number(value))}
+                            axisLine={false}
+                            tickLine={false}
+                            tickMargin={8}
+                          />
+                          <YAxis
+                            type="category"
+                            dataKey="tickerId"
+                            width={56}
+                            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip
+                            formatter={formatTooltipCurrency}
+                            cursor={{ fill: 'hsl(var(--muted) / 0.35)' }}
+                            contentStyle={TOOLTIP_STYLE}
+                            labelStyle={TOOLTIP_LABEL_STYLE}
+                            itemStyle={TOOLTIP_ITEM_STYLE}
+                            isAnimationActive={false}
+                          />
+                          <Bar
+                            dataKey="profitLoss"
+                            name="PnL"
+                            radius={[0, 4, 4, 0]}
+                            isAnimationActive={true}
+                          >
+                            {analytics.stockChartRows.map((stock) => (
+                              <Cell
+                                key={stock.tickerId}
+                                fill={
+                                  stock.profitLoss >= 0
+                                    ? MODERN_COLORS.pnlPositive
+                                    : MODERN_COLORS.pnlNegative
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

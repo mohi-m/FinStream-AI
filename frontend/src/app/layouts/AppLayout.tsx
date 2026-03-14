@@ -30,14 +30,14 @@ const navItems = [
 
 function TopNav({ className }: { className?: string }) {
   return (
-    <nav className={cn('flex items-center justify-center gap-2 lg:gap-4', className)}>
+    <nav className={cn('flex items-center justify-center gap-1 sm:gap-2', className)}>
       {navItems.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
           className={({ isActive }) =>
             cn(
-              'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:gap-2 sm:px-4 sm:py-2 sm:text-sm lg:px-3.5 lg:py-1.5',
               isActive
                 ? 'bg-foreground text-background shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -58,6 +58,7 @@ function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const desktopSearchContainerRef = useRef<HTMLDivElement | null>(null)
+  const tabletSearchContainerRef = useRef<HTMLDivElement | null>(null)
   const mobileSearchContainerRef = useRef<HTMLDivElement | null>(null)
   const debouncedQuery = useDebounce(searchQuery.trim(), 300)
   const {
@@ -86,9 +87,10 @@ function Header() {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node
       const isInsideDesktopSearch = desktopSearchContainerRef.current?.contains(target)
+      const isInsideTabletSearch = tabletSearchContainerRef.current?.contains(target)
       const isInsideMobileSearch = mobileSearchContainerRef.current?.contains(target)
 
-      if (!isInsideDesktopSearch && !isInsideMobileSearch) {
+      if (!isInsideDesktopSearch && !isInsideTabletSearch && !isInsideMobileSearch) {
         setIsSearchOpen(false)
       }
     }
@@ -172,11 +174,11 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
-      <div className="grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 lg:px-6">
+      <div className="grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:gap-4 sm:px-4 lg:px-6">
         <div className="flex items-center gap-3">
           <NavLink
             to="/app/overview"
-            className="text-lg font-semibold tracking-tight text-foreground"
+            className="text-base font-semibold tracking-tight text-foreground sm:text-lg"
           >
             FinStream
           </NavLink>
@@ -186,7 +188,7 @@ function Header() {
 
         <div className="flex items-center justify-end gap-1 sm:gap-2">
           <div className="hidden lg:flex items-center">
-            <div ref={desktopSearchContainerRef} className="relative w-md">
+            <div ref={desktopSearchContainerRef} className="relative w-56 xl:w-72">
               <form onSubmit={handleSearchSubmit}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -245,7 +247,33 @@ function Header() {
         </div>
       </div>
 
-      <div className="border-t border-border/60 px-3 py-2 lg:hidden">
+      {/* Tablet: search row only, md–lg */}
+      <div className="hidden md:block lg:hidden border-t border-border/60 px-3 py-1.5">
+        <div ref={tabletSearchContainerRef} className="relative w-full">
+          <form onSubmit={handleSearchSubmit}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by ticker or company..."
+              className="h-9 w-full rounded-full border-border/60 bg-muted/30 pl-10 focus-visible:ring-primary/30"
+              value={searchQuery}
+              onFocus={() => setIsSearchOpen(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setIsSearchOpen(true)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  setIsSearchOpen(false)
+                }
+              }}
+            />
+          </form>
+          {renderSearchResults('left-0 right-0')}
+        </div>
+      </div>
+
+      {/* Mobile: search + nav combined in one row, below md */}
+      <div className="md:hidden border-t border-border/60 px-3 pt-1.5 pb-1">
         <div ref={mobileSearchContainerRef} className="relative w-full">
           <form onSubmit={handleSearchSubmit}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -265,13 +293,9 @@ function Header() {
               }}
             />
           </form>
-
           {renderSearchResults('left-0 right-0')}
         </div>
-      </div>
-
-      <div className="border-t border-border/60 px-3 py-2 md:hidden">
-        <TopNav className="w-full justify-start overflow-x-auto" />
+        <TopNav className="mt-1 w-full justify-start overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />
       </div>
     </header>
   )
@@ -285,7 +309,7 @@ export function AppLayout() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="flex-1 p-4 lg:p-6"
+        className="flex-1 p-3 sm:p-4 lg:p-6"
       >
         <Outlet />
       </motion.main>

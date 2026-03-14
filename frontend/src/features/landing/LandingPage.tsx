@@ -103,19 +103,19 @@ export function LandingPage() {
     <div className="min-h-screen overflow-hidden">
       {/* Animated background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-background" />
+        <div className="absolute inset-0 bg-linear-to-br from-background via-background to-background" />
 
         {/* Animated gradient orbs */}
         <FloatingOrb
-          className="w-[600px] h-[600px] -top-32 -right-32 bg-gradient-to-br from-primary/30 to-blue-500/20 animate-pulse-glow"
+          className="h-150 w-150 -top-32 -right-32 bg-linear-to-br from-primary/30 to-blue-500/20 animate-pulse-glow"
           delay={0}
         />
         <FloatingOrb
-          className="w-[500px] h-[500px] top-1/2 -left-48 bg-gradient-to-br from-violet-500/20 to-purple-500/10 animate-pulse-glow"
+          className="h-125 w-125 top-1/2 -left-48 bg-linear-to-br from-violet-500/20 to-purple-500/10 animate-pulse-glow"
           delay={0.5}
         />
         <FloatingOrb
-          className="w-[400px] h-[400px] bottom-0 right-1/4 bg-gradient-to-br from-cyan-500/15 to-teal-500/10 animate-pulse-glow"
+          className="h-100 w-100 bottom-0 right-1/4 bg-linear-to-br from-cyan-500/15 to-teal-500/10 animate-pulse-glow"
           delay={1}
         />
 
@@ -135,50 +135,55 @@ export function LandingPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto flex flex-wrap items-center gap-3 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-4 sm:py-0">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="flex min-w-0 items-center gap-3"
           >
             <div className="relative">
               <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-              <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-blue-500">
                 <TrendingUp className="h-5 w-5 text-white" />
               </div>
             </div>
-            <span className="text-2xl font-bold tracking-tight">FinStream</span>
+            <span className="truncate text-xl font-bold tracking-tight sm:text-2xl">FinStream</span>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-2 ml-auto mr-8 border-2 border-gray-500 rounded-xl"
+            className="order-3 flex w-full items-center justify-center sm:order-2 sm:ml-auto sm:mr-4 sm:w-auto"
           >
             <a
               href="https://github.com/mohi-m/FinStream-AI"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-muted/50 transition-all group"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border/50 px-3 py-2 transition-all group hover:border-primary/50 hover:bg-muted/50 sm:w-auto sm:px-2 sm:py-1"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
               </svg>
               <span className="text-sm font-medium hidden sm:inline">Finstream-AI</span>
+              <span className="text-sm font-medium sm:hidden">Project Repo</span>
             </a>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            className="ml-auto flex items-center gap-2 sm:order-3 sm:gap-3"
           >
-            <Button variant="ghost" onClick={() => setLoginOpen(true)}>
+            <Button
+              variant="ghost"
+              onClick={() => setLoginOpen(true)}
+              className="h-9 px-3 sm:h-10 sm:px-4"
+            >
               Log In
             </Button>
             <Button
               onClick={() => setLoginOpen(true)}
-              className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-lg shadow-primary/25"
+              className="h-9 px-3 bg-linear-to-r from-primary to-blue-500 shadow-lg shadow-primary/25 hover:from-primary/90 hover:to-blue-500/90 sm:h-10 sm:px-4"
             >
               Sign Up
             </Button>
@@ -187,14 +192,14 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative container mx-auto px-4 pt-20 pb-32 lg:pt-32 lg:pb-40">
-        <div className="text-center max-w-5xl mx-auto">
+      <section className="relative container mx-auto px-4 pb-24 pt-14 sm:pt-16 md:pb-32 lg:pt-28 lg:pb-40">
+        <div className="mx-auto max-w-5xl text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30 backdrop-blur-sm mb-8"
+            className="mb-6 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-border/50 bg-muted/30 px-3 py-2 text-xs backdrop-blur-sm sm:mb-8 sm:px-4 sm:text-sm"
           >
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Introducing AI-Powered Insights</span>
@@ -206,7 +211,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1]"
+            className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-7xl lg:text-8xl"
           >
             The Future of
             <br />
@@ -217,7 +222,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-8 text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+            className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-muted-foreground sm:mt-8 sm:text-lg md:text-2xl"
           >
             Track stocks, manage portfolios, and unlock powerful financial insights with our
             next-generation platform. Make smarter investment decisions with real-time data.
@@ -228,7 +233,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-12 flex flex-col sm:flex-row gap-4 justify-center"
+            className="mt-10 flex flex-col items-center justify-center gap-4 sm:mt-12 sm:flex-row"
           >
             <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -239,7 +244,7 @@ export function LandingPage() {
               <motion.span
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 z-10 rounded-full border border-primary/35 bg-background/90 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase backdrop-blur-sm whitespace-nowrap opacity-90 transition-opacity duration-300 ease-out group-hover:opacity-0"
+                className="pointer-events-none absolute -top-5 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/35 bg-background/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary opacity-90 transition-opacity duration-300 ease-out backdrop-blur-sm group-hover:opacity-0 sm:block"
               >
                 No Signup
               </motion.span>
@@ -254,7 +259,7 @@ export function LandingPage() {
                 size="lg"
                 onClick={handleTryDemo}
                 disabled={demoLoading}
-                className="group relative h-14 px-10 text-base font-semibold text-white bg-linear-to-r from-primary via-blue-500 to-cyan-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 border border-white/15 shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] overflow-hidden transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
+                className="group relative h-12 w-full max-w-sm overflow-hidden border border-white/15 bg-linear-to-r from-primary via-blue-500 to-cyan-500 px-6 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(59,130,246,0.35),0_14px_34px_-12px_rgba(14,165,233,0.75)] transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:from-primary/90 hover:via-blue-500/90 hover:to-cyan-500/90 active:scale-[0.99] disabled:cursor-not-allowed sm:h-14 sm:w-auto sm:max-w-none sm:px-10 sm:text-base"
               >
                 <motion.span
                   aria-hidden
@@ -274,18 +279,18 @@ export function LandingPage() {
         </div>
 
         {/* ================= 3D DASHBOARD VISUALIZATION ================= */}
-        <div className="perspective-container relative mt-12 h-[500px] md:h-[800px] w-full flex justify-center">
+        <div className="perspective-container relative mt-12 flex h-110 w-full justify-center sm:h-130 md:h-200">
           {/* The Tilted Dashboard Container */}
           <div className="tilted-dashboard glass-effect bg-[#0f1623] rounded-2xl md:rounded-3xl border border-slate-700/50 shadow-2xl shadow-black/80 w-full max-w-6xl h-full relative z-20 overflow-hidden flex flex-col">
             {/* Fake Browser Header */}
-            <div className="h-10 border-b border-slate-700/50 bg-slate-900/50 flex items-center px-4 gap-4 shrink-0">
+            <div className="flex h-10 shrink-0 items-center gap-2 border-b border-slate-700/50 bg-slate-900/50 px-3 sm:gap-4 sm:px-4">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-[#ff5f57]"></div>
                 <div className="w-3 h-3 rounded-full bg-[#febc2e]"></div>
                 <div className="w-3 h-3 rounded-full bg-[#28c840]"></div>
               </div>
-              <div className="flex-1 flex justify-center">
-                <div className="bg-black/20 text-slate-500 text-xs px-3 py-1 rounded-md flex items-center gap-2">
+              <div className="flex flex-1 justify-center">
+                <div className="hidden items-center gap-2 rounded-md bg-black/20 px-3 py-1 text-xs text-slate-500 sm:flex">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-3 w-3"
@@ -300,8 +305,11 @@ export function LandingPage() {
                   </svg>
                   www.finstream-ai.app
                 </div>
+                <div className="rounded-md bg-black/20 px-3 py-1 text-[11px] text-slate-500 sm:hidden">
+                  finstream-ai.app
+                </div>
               </div>
-              <div className="w-12"></div> {/* Spacer */}
+              <div className="w-4 sm:w-12"></div> {/* Spacer */}
             </div>
 
             {/* Dashboard Body */}
@@ -366,7 +374,7 @@ export function LandingPage() {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 p-6 md:p-8 bg-[#0B101B] overflow-hidden relative">
+              <div className="relative flex-1 overflow-hidden bg-[#0B101B] p-4 sm:p-5 md:p-8">
                 {/* Background Grid for Charts */}
                 <div
                   className="absolute inset-0 opacity-[0.03]"
@@ -378,14 +386,18 @@ export function LandingPage() {
                 ></div>
 
                 {/* Header Info */}
-                <div className="flex justify-between items-end mb-8 relative z-10">
+                <div className="relative z-10 mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">Portfolio Overview</h2>
-                    <p className="text-slate-400 text-sm">Welcome back, Alex.</p>
+                    <h2 className="mb-1 text-xl font-bold text-white sm:text-2xl">
+                      Portfolio Overview
+                    </h2>
+                    <p className="text-xs text-slate-400 sm:text-sm">Welcome back, Alex.</p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-white tracking-tight">$142,500.24</div>
-                    <div className="text-emerald-400 text-sm font-medium flex justify-end items-center gap-1">
+                  <div className="text-left sm:text-right">
+                    <div className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                      $142,500.24
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-medium text-emerald-400 sm:justify-end sm:text-sm">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-3 w-3"
@@ -404,9 +416,9 @@ export function LandingPage() {
                 </div>
 
                 {/* Cards Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+                <div className="relative z-10 mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 md:grid-cols-3 sm:gap-6">
                   {/* Card 1 */}
-                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm">
+                  <div className="rounded-xl border border-slate-700/50 bg-slate-800/40 p-4 backdrop-blur-sm sm:p-5">
                     <div className="flex justify-between mb-4">
                       <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-xs">
                         AAPL
@@ -420,10 +432,10 @@ export function LandingPage() {
                       <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[80%]"></div>
                       <div className="w-1/5 bg-emerald-500 rounded-t-sm h-[70%]"></div>
                     </div>
-                    <div className="mt-2 font-bold text-lg">$189.45</div>
+                    <div className="mt-2 text-base font-bold sm:text-lg">$189.45</div>
                   </div>
                   {/* Card 2 */}
-                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm hidden md:block">
+                  <div className="hidden rounded-xl border border-slate-700/50 bg-slate-800/40 p-4 backdrop-blur-sm sm:block sm:p-5">
                     <div className="flex justify-between mb-4">
                       <div className="h-8 w-8 rounded-full bg-[#76b900] flex items-center justify-center text-black font-bold text-xs">
                         NVDA
@@ -457,12 +469,12 @@ export function LandingPage() {
                         </defs>
                       </svg>
                     </div>
-                    <div className="mt-2 font-bold text-lg">$460.18</div>
+                    <div className="mt-2 text-base font-bold sm:text-lg">$460.18</div>
                   </div>
                   {/* Card 3 */}
-                  <div className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-xl backdrop-blur-sm hidden md:block">
+                  <div className="hidden rounded-xl border border-slate-700/50 bg-slate-800/40 p-4 backdrop-blur-sm lg:block lg:p-5">
                     <div className="flex justify-between mb-4">
-                      <div className="h-8 w-8 rounded-full bg-[#000] border border-white/20 flex items-center justify-center text-white font-bold text-xs">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black text-xs font-bold text-white">
                         TSLA
                       </div>
                       <span className="text-red-400 text-xs">-0.8%</span>
@@ -474,15 +486,15 @@ export function LandingPage() {
                       <div className="w-1/5 bg-red-500 rounded-t-sm h-[40%]"></div>
                       <div className="w-1/5 bg-red-500 rounded-t-sm h-[30%]"></div>
                     </div>
-                    <div className="mt-2 font-bold text-lg">$242.50</div>
+                    <div className="mt-2 text-base font-bold sm:text-lg">$242.50</div>
                   </div>
                 </div>
 
                 {/* Main Chart Area */}
-                <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 h-64 md:h-96 relative w-full overflow-hidden">
-                  <div className="flex justify-between mb-4">
+                <div className="relative h-44 w-full overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/30 p-4 sm:h-64 sm:p-6 md:h-96">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="text-sm font-medium text-slate-300">Performance (YTD)</div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <span className="px-2 py-1 text-xs bg-slate-700 rounded text-slate-300">
                         1D
                       </span>
@@ -493,7 +505,7 @@ export function LandingPage() {
                     </div>
                   </div>
                   {/* Large Simulated Chart */}
-                  <div className="absolute bottom-0 left-0 right-0 top-16 px-4">
+                  <div className="absolute bottom-0 left-0 right-0 top-14 px-2 sm:top-16 sm:px-4">
                     <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
                       <path
                         d="M0,130 C40,120 60,140 100,100 C140,60 160,90 200,70 C240,50 280,80 320,40 C360,0 380,20 400,10"
@@ -583,12 +595,12 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-32">
+      <section id="features" className="container mx-auto px-4 py-20 sm:py-24 lg:py-32">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center mb-20"
+          className="mb-14 text-center sm:mb-20"
         >
           <motion.span
             initial={{ opacity: 0, y: 20 }}
@@ -603,7 +615,7 @@ export function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold"
+            className="text-3xl font-bold sm:text-4xl md:text-5xl lg:text-6xl"
           >
             Everything You Need to
             <br />
@@ -614,7 +626,7 @@ export function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto"
+            className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-xl"
           >
             Powerful tools designed to help you track, analyze, and grow your investments with
             confidence.
@@ -633,12 +645,12 @@ export function LandingPage() {
               <Card className="h-full group bg-background/50 border-border/50 hover:border-primary/30 transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 overflow-hidden relative">
                 {/* Gradient hover effect */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
                 />
 
                 <CardHeader className="relative">
                   <div
-                    className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-500`}
+                    className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br ${feature.gradient} shadow-lg transition-transform duration-500 group-hover:scale-110`}
                   >
                     <feature.icon className="h-7 w-7 text-white" />
                   </div>
@@ -656,7 +668,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-32">
+      <section className="container mx-auto px-4 py-20 sm:py-24 lg:py-32">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -664,12 +676,12 @@ export function LandingPage() {
           className="relative overflow-hidden rounded-3xl"
         >
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-blue-600 to-violet-600" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary via-blue-600 to-violet-600" />
 
           {/* Animated background shapes */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+            <div className="absolute left-0 top-0 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl sm:h-96 sm:w-96" />
+            <div className="absolute bottom-0 right-0 h-64 w-64 translate-x-1/2 translate-y-1/2 rounded-full bg-white/10 blur-3xl sm:h-96 sm:w-96" />
           </div>
 
           {/* Grid pattern */}
@@ -682,12 +694,12 @@ export function LandingPage() {
             }}
           />
 
-          <div className="relative px-8 py-20 md:py-28 text-center">
+          <div className="relative px-5 py-14 text-center sm:px-8 sm:py-20 md:py-28">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white"
+              className="text-3xl font-bold text-white sm:text-4xl md:text-5xl lg:text-6xl"
             >
               Ready to Transform Your
               <br />
@@ -698,12 +710,12 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+              className="mt-8 flex flex-col justify-center gap-4 sm:mt-10 sm:flex-row"
             >
               <Button
                 size="lg"
                 variant="secondary"
-                className="h-14 px-8 text-base font-semibold shadow-xl group"
+                className="group h-12 w-full px-6 text-sm font-semibold shadow-xl sm:h-14 sm:w-auto sm:px-8 sm:text-base"
                 onClick={() => setLoginOpen(true)}
               >
                 Get Started
@@ -717,23 +729,23 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/50 bg-muted/20">
         <div className="container mx-auto px-4 py-16">
-          <div className="flex items-center justify-center mb-12">
+          <div className="mb-12 flex items-center justify-center text-center">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary to-blue-500">
                   <TrendingUp className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xl font-bold">FinStream</span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="mx-auto max-w-xs text-sm text-muted-foreground">
                 The next-generation platform for modern investors.
               </p>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-border/50 pt-8 text-center md:flex-row md:text-left">
             <p className="text-sm text-muted-foreground">© 2026 FinStream. All rights reserved.</p>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-5 sm:gap-6">
               <a
                 href="https://github.com/mohi-m"
                 className="text-muted-foreground hover:text-foreground transition-colors"

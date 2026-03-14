@@ -52,7 +52,7 @@ export function PortfoliosPage() {
   const [deleteHoldingOpen, setDeleteHoldingOpen] = useState(false)
   const [deletingHolding, setDeletingHolding] = useState<HoldingDto | null>(null)
 
-  const pageContainerClass = 'mx-auto w-full max-w-screen-2xl px-2 sm:px-3 lg:px-4'
+  const pageContainerClass = 'mx-auto w-full max-w-screen-2xl px-1 sm:px-3 lg:px-4'
 
   const {
     data: portfoliosData,
@@ -135,19 +135,19 @@ export function PortfoliosPage() {
 
   return (
     <div
-      className={`${pageContainerClass} space-y-6 ${hasActivePortfolio ? 'lg:flex lg:h-[calc(100dvh-7.5rem)] lg:flex-col lg:space-y-4' : ''}`}
+      className={`${pageContainerClass} space-y-6 ${hasActivePortfolio ? 'lg:flex lg:flex-col lg:space-y-4 2xl:h-[calc(100dvh-7.5rem)]' : ''}`}
     >
       {/* Header with Portfolio Dropdown */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold">My Portfolio</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <h1 className="text-2xl font-bold sm:text-3xl">My Portfolio</h1>
           {portfolios.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <Select
                 value={activePortfolioId || ''}
                 onValueChange={(value) => setSelectedPortfolioId(value)}
               >
-                <SelectTrigger className="w-55">
+                <SelectTrigger className="w-full sm:w-64">
                   <SelectValue placeholder="Select portfolio" />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,7 +183,7 @@ export function PortfoliosPage() {
             </div>
           )}
         </div>
-        <Button onClick={handleCreatePortfolio}>
+        <Button onClick={handleCreatePortfolio} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Portfolio
         </Button>
@@ -206,14 +206,14 @@ export function PortfoliosPage() {
       ) : activePortfolioId ? (
         <>
           {/* Two-column layout: Commentary (left) + Holdings & Analytics (right) */}
-          <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 2xl:min-h-0 2xl:flex-1">
             {/* Left Column: AI Commentary */}
-            <div className="lg:col-span-2 lg:min-h-0">
+            <div className="lg:col-span-2 2xl:min-h-0">
               <PortfolioCommentary portfolioId={activePortfolioId} />
             </div>
 
             {/* Right Column: Portfolio Detail */}
-            <div className="lg:col-span-3 lg:flex lg:min-h-0 lg:flex-col lg:gap-4">
+            <div className="lg:col-span-3 lg:flex lg:flex-col lg:gap-4 2xl:min-h-0">
               <PortfolioSummaryCards
                 holdings={holdings}
                 baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
@@ -223,7 +223,7 @@ export function PortfoliosPage() {
 
               <Tabs
                 defaultValue="analytics"
-                className="space-y-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-4"
+                className="space-y-6 lg:flex lg:flex-col lg:space-y-4 2xl:min-h-0 2xl:flex-1"
               >
                 <TabsList className="w-full rounded-full">
                   <TabsTrigger value="analytics" className="flex-1 rounded-full">
@@ -234,26 +234,26 @@ export function PortfoliosPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="analytics" className="mt-0 lg:min-h-0 lg:flex-1">
+                <TabsContent value="analytics" className="mt-0 2xl:min-h-0 2xl:flex-1">
                   <PortfolioAnalytics
                     holdings={holdings}
                     baseCurrency={selectedPortfolio?.baseCurrency || 'USD'}
-                    className="lg:h-full"
+                    className="2xl:h-full"
                   />
                 </TabsContent>
 
-                <TabsContent value="holdings" className="mt-0 lg:min-h-0 lg:flex-1">
-                  <Card className="lg:flex lg:h-full lg:flex-col">
+                <TabsContent value="holdings" className="mt-0 2xl:min-h-0 2xl:flex-1">
+                  <Card className="lg:flex lg:flex-col 2xl:h-full">
                     <CardHeader>
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <CardTitle className="text-lg">Holdings</CardTitle>
-                        <Button onClick={handleCreateHolding}>
+                        <Button onClick={handleCreateHolding} className="w-full sm:w-auto">
                           <Plus className="h-4 w-4 mr-2" />
                           Add Holding
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="lg:min-h-0 lg:flex-1 lg:overflow-auto">
+                    <CardContent className="2xl:min-h-0 2xl:flex-1 2xl:overflow-auto">
                       {holdingsLoading ? (
                         <div className="space-y-2">
                           {[1, 2, 3].map((i) => (
@@ -270,14 +270,16 @@ export function PortfoliosPage() {
                           }}
                         />
                       ) : (
-                        <Table>
+                        <Table className="min-w-160">
                           <TableHeader>
                             <TableRow>
                               <TableHead>Ticker</TableHead>
                               <TableHead className="text-left">Quantity</TableHead>
                               <TableHead className="text-left">Invested Amount</TableHead>
-                              <TableHead>Notes</TableHead>
-                              <TableHead>Last Invested Date</TableHead>
+                              <TableHead className="hidden md:table-cell">Notes</TableHead>
+                              <TableHead className="hidden lg:table-cell">
+                                Last Invested Date
+                              </TableHead>
                               <TableHead className="w-20"></TableHead>
                             </TableRow>
                           </TableHeader>
@@ -294,10 +296,10 @@ export function PortfoliosPage() {
                                       )
                                     : '-'}
                                 </TableCell>
-                                <TableCell className="max-w-50 truncate">
+                                <TableCell className="hidden max-w-48 truncate md:table-cell">
                                   {holding.notes || '-'}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="hidden lg:table-cell">
                                   {holding.updatedAt ? formatDate(holding.updatedAt) : '-'}
                                 </TableCell>
                                 <TableCell>

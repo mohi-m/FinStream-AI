@@ -179,7 +179,7 @@ export function HoldingDialog({ open, onOpenChange, portfolioId, holding }: Hold
               <div className="space-y-2">
                 <Label htmlFor="holding-ticker-search">Ticker</Label>
                 {selectedTicker ? (
-                  <div className="flex items-center justify-between p-3">
+                  <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <span className="font-medium">{selectedTicker.tickerId}</span>
                       {selectedTicker.companyName && (
@@ -222,7 +222,7 @@ export function HoldingDialog({ open, onOpenChange, portfolioId, holding }: Hold
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity (Shares)</Label>
                 <Input
