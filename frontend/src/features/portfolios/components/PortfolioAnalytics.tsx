@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import {
   Card,
@@ -218,6 +218,7 @@ function renderWrappedSectorTick(props: {
 }
 
 export function PortfolioAnalytics({ holdings, baseCurrency, className }: PortfolioAnalyticsProps) {
+  const [tab, setTab] = useState<'stocks' | 'sector'>('stocks')
   const priceQueries = useQueries({
     queries: holdings.map((holding) => ({
       queryKey: ['prices', holding.tickerId, 'latest'],
@@ -400,7 +401,11 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
   return (
     <Card className={cn('flex h-full min-h-128 flex-col overflow-hidden sm:min-h-144', className)}>
       <CardContent className="flex min-h-0 flex-1 flex-col gap-3 pt-5">
-        <Tabs defaultValue="stocks" className="flex min-h-0 flex-1 flex-col">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as 'stocks' | 'sector')}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <TabsList className="mx-auto flex h-auto w-full max-w-xs rounded-full border border-border/70 bg-muted/40 p-1 sm:w-fit sm:max-w-none">
             <TabsTrigger
               value="stocks"
@@ -456,9 +461,9 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                     </p>
                   </div>
 
-                  <div className="min-h-0 flex-1 overflow-x-auto">
-                    <div className="h-full min-w-140 sm:min-w-0">
-                      <ResponsiveContainer width="100%" height="100%">
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <div className="h-full min-w-0">
+                      <ResponsiveContainer key={`sector-${tab}`} width="100%" height="100%">
                         <BarChart
                           data={analytics.sectorChartRows}
                           margin={{ top: 8, right: 16, left: 4, bottom: 12 }}
@@ -544,9 +549,9 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                 <CardHeader className="pb-1">
                   <CardTitle className="text-sm">Stock Value Breakdown</CardTitle>
                 </CardHeader>
-                <CardContent className="min-h-0 flex-1 overflow-x-auto">
-                  <div className="h-full min-w-140 sm:min-w-0">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="min-h-0 flex-1 overflow-hidden">
+                  <div className="h-full min-w-0">
+                    <ResponsiveContainer key={`stocks-breakdown-${tab}`} width="100%" height="100%">
                       <BarChart
                         data={analytics.stockChartRows}
                         margin={{ top: 8, right: 8, left: 4, bottom: 20 }}
@@ -586,7 +591,7 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                           axisLine={false}
                           tickLine={false}
                           tickMargin={8}
-                          interval={0}
+                          interval="preserveStartEnd"
                           height={40}
                         />
                         <YAxis
@@ -631,9 +636,9 @@ export function PortfolioAnalytics({ holdings, baseCurrency, className }: Portfo
                   <CardTitle className="text-sm">PnL by Stock</CardTitle>
                 </CardHeader>
                 <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
-                  <div className="min-h-0 flex-1 overflow-x-auto">
-                    <div className="h-full min-w-105 sm:min-w-0">
-                      <ResponsiveContainer width="100%" height="100%">
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    <div className="h-full min-w-0">
+                      <ResponsiveContainer key={`stocks-pnl-${tab}`} width="100%" height="100%">
                         <BarChart
                           data={analytics.stockChartRows}
                           layout="vertical"
