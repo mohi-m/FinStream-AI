@@ -13,6 +13,7 @@ import java.time.Duration;
 public class CacheConfig {
 
     private static final Duration TICKER_CACHE_TTL = Duration.ofHours(1);
+    private static final Duration PORTFOLIO_COMMENTARY_CACHE_TTL = Duration.ofHours(24);
 
     @Bean
     public CacheManager cacheManager() {
@@ -20,7 +21,7 @@ public class CacheConfig {
         cacheManager.registerCustomCache("tickerById", buildOneHourCache());
         cacheManager.registerCustomCache("tickerSectors", buildOneHourCache());
         cacheManager.registerCustomCache("topTickersByWeeklyGain", buildOneHourCache());
-        cacheManager.registerCustomCache("portfolioCommentary", buildOneHourCache());
+        cacheManager.registerCustomCache("portfolioCommentary", buildPortfolioCommentaryCache());
         cacheManager.setAllowNullValues(false);
         return cacheManager;
     }
@@ -28,6 +29,12 @@ public class CacheConfig {
     private Cache<Object, Object> buildOneHourCache() {
         return Caffeine.newBuilder()
                 .expireAfterWrite(TICKER_CACHE_TTL)
+                .build();
+    }
+
+    private Cache<Object, Object> buildPortfolioCommentaryCache() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(PORTFOLIO_COMMENTARY_CACHE_TTL)
                 .build();
     }
 }
