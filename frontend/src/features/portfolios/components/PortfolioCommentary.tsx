@@ -60,7 +60,7 @@ function CommentaryCardShell({
                 variant="secondary"
                 className="border border-primary/20 bg-primary/10 text-primary"
               >
-                GPT 5.3
+                GPT 5
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -182,7 +182,7 @@ export function PortfolioCommentary({ portfolioId }: PortfolioCommentaryProps) {
       >
         <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
           <p className="text-sm font-medium text-foreground">
-            Please wait. GPT-5.3 is crunching the analysis for your portfolio.
+            Please wait. GPT-5 is crunching the analysis for your portfolio.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Fun fact: this response is augmented by SEC 10-K form's data
